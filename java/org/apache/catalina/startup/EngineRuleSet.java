@@ -87,15 +87,19 @@ public class EngineRuleSet extends RuleSetBase {
      */
     @Override
     public void addRuleInstances(Digester digester) {
+        // prefix是Server/Service/
 
+        // 创建StandardEngine
         digester.addObjectCreate(prefix + "Engine",
                                  "org.apache.catalina.core.StandardEngine",
                                  "className");
+        // set方式初始化属性
         digester.addSetProperties(prefix + "Engine");
         digester.addRule(prefix + "Engine",
                          new LifecycleListenerRule
                          ("org.apache.catalina.startup.EngineConfig",
                           "engineConfigClass"));
+        // 将StandardEngine通过调用Service的setContainer方法设置进Service中
         digester.addSetNext(prefix + "Engine",
                             "setContainer",
                             "org.apache.catalina.Container");
@@ -121,6 +125,7 @@ public class EngineRuleSet extends RuleSetBase {
 
         digester.addRuleSet(new RealmRuleSet(prefix + "Engine/"));
 
+        // Valve也必须指定className
         digester.addObjectCreate(prefix + "Engine/Valve",
                                  null, // MUST be specified in the element
                                  "className");

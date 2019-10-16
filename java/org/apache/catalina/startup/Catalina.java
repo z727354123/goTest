@@ -323,10 +323,14 @@ public class Catalina {
         digester.setUseContextClassLoader(true);
 
         // Configure the actions we will be using
+
+        // 将<Server>节点，解析为一个org.apache.catalina.core.StandardServer对象，如果配置了className属性，则会解析对应的类对象。
         digester.addObjectCreate("Server",
                                  "org.apache.catalina.core.StandardServer",
                                  "className");
+        // 将<Server>节点中的属性，使用StandardServer对象对应的set方法进行属性初始化
         digester.addSetProperties("Server");
+        // 将<Server>节点对应的对象，调用<Server>节点的父节点对象的setServer(org.apache.catalina.Server params)方法，Server的父对象为this，后面会设置，也就Catalina对象。
         digester.addSetNext("Server",
                             "setServer",
                             "org.apache.catalina.Server");
@@ -338,6 +342,7 @@ public class Catalina {
                             "setGlobalNamingResources",
                             "org.apache.catalina.deploy.NamingResources");
 
+        // 对于Server/Listener节点，比如配置对于的实现类。
         digester.addObjectCreate("Server/Listener",
                                  null, // MUST be specified in the element
                                  "className");
@@ -372,11 +377,13 @@ public class Catalina {
                             "addExecutor",
                             "org.apache.catalina.Executor");
 
-
+        // 创建Connector对象，在里面会初始化executor
         digester.addRule("Server/Service/Connector",
                          new ConnectorCreateRule());
+        // 根据Connector节点的属性，调用set方法进行初始化，除开executor属性。
         digester.addRule("Server/Service/Connector",
                          new SetAllPropertiesRule(new String[]{"executor"}));
+        // 将Connector对象通过调用Service.addConnector方法添加到Service中去，addConnector方法并不是简单的实现，还有其他逻辑，后面在详细的介绍。
         digester.addSetNext("Server/Service/Connector",
                             "addConnector",
                             "org.apache.catalina.connector.Connector");
@@ -391,6 +398,7 @@ public class Catalina {
                             "org.apache.catalina.LifecycleListener");
 
         // Add RuleSets for nested elements
+        // addRuleSet方法实现也不复杂，就是调用NamingRuleSet、EngineRuleSet这些类的addRuleInstances方法
         digester.addRuleSet(new NamingRuleSet("Server/GlobalNamingResources/"));
         digester.addRuleSet(new EngineRuleSet("Server/Service/"));
         digester.addRuleSet(new HostRuleSet("Server/Service/Engine/"));

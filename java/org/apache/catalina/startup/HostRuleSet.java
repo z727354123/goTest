@@ -102,6 +102,7 @@ public class HostRuleSet extends RuleSetBase {
                             "addChild",
                             "org.apache.catalina.Container");
 
+        // 直接调用addAlias(String s)方法
         digester.addCallMethod(prefix + "Host/Alias",
                                "addAlias", 0);
 

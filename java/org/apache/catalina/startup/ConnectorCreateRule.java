@@ -54,6 +54,13 @@ public class ConnectorCreateRule extends Rule {
     @Override
     public void begin(String namespace, String name, Attributes attributes)
             throws Exception {
+        // 先获取上层父节点Service
+        // 判断Connector节点是否配置了executor属性，如果配置了，则根据executor名字从父节点service中获取到Executor对象。
+        // 根据Connector节点上配置的protocol协议名来初始化Connector
+        // Connector初始化完成之后，获取对应的ProtocolHandler对象，将executor对象设置进去
+
+        // 从这里可以看出来，如果有多个Connector节点，每个节点可以使用不同的executor，也就是线程池，也可以公用，根据名字来。
+
         Service svc = (Service)digester.peek();
         Executor ex = null;
         if ( attributes.getValue("executor")!=null ) {
