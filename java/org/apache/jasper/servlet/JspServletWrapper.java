@@ -387,6 +387,7 @@ public class JspServletWrapper {
 
             /*
              * (1) Compile
+             *  将jsp文件编译成servlet
              */
             if (options.getDevelopment() || mustCompile) {
                 synchronized (this) {
@@ -405,6 +406,7 @@ public class JspServletWrapper {
 
             /*
              * (2) (Re)load servlet class file
+             * 生成Servlet文件对应的对象实例
              */
             servlet = getServlet();
 
@@ -443,16 +445,17 @@ public class JspServletWrapper {
             /*
              * (3) Handle limitation of number of loaded Jsps
              */
-            if (unloadAllowed) {
+            if (unloadAllowed) {  // 是否要卸载jsp-servlet
                 synchronized(this) {
-                    if (unloadByCount) {
-                        if (unloadHandle == null) {
+                    if (unloadByCount) { // 如果配置了限制的数量
+                        if (unloadHandle == null) { // 待卸载的jsp-servlet的处理器
                             unloadHandle = ctxt.getRuntimeContext().push(this);
                         } else if (lastUsageTime < ctxt.getRuntimeContext().getLastJspQueueUpdate()) {
-                            ctxt.getRuntimeContext().makeYoungest(unloadHandle);
+                            ctxt.getRuntimeContext().makeYoungest(unloadHandle); // 卸载上一个
                             lastUsageTime = System.currentTimeMillis();
                         }
                     } else {
+                        // 更新最近使用的时间
                         if (lastUsageTime < ctxt.getRuntimeContext().getLastJspQueueUpdate()) {
                             lastUsageTime = System.currentTimeMillis();
                         }

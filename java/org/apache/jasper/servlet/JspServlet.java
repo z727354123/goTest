@@ -373,6 +373,7 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
                                 boolean precompile)
         throws ServletException, IOException {
 
+        // 做一个并发的控制，当有两个请求并发访问同一个jsp页面时，只生成唯一的一个JspServletWrapper，并缓存
         JspServletWrapper wrapper = rctxt.getWrapper(jspUri);
         if (wrapper == null) {
             synchronized(this) {
@@ -386,12 +387,14 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
                     }
                     wrapper = new JspServletWrapper(config, options, jspUri,
                                                     rctxt);
+                    // 将wrapper存入JspRuntimeContextde的jsps中，表示转载jsp
                     rctxt.addWrapper(jspUri,wrapper);
                 }
             }
         }
 
         try {
+            // 使用JspServletWrapper来处理请求
             wrapper.service(request, response, precompile);
         } catch (FileNotFoundException fnfe) {
             handleMissingResource(request, response, jspUri);

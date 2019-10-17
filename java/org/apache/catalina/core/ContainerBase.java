@@ -1262,6 +1262,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         setState(LifecycleState.STARTING);
 
         // Start our thread
+        // 每个容器Engine、Host、Context、Wrapper在启动时都会去启动线程
         threadStart();
     }
 
@@ -1645,12 +1646,14 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                         // Ignore
                     }
                     if (!threadDone) {
+                        // 获取当前的容器
                         Container parent = (Container) getMappingObject();
                         ClassLoader cl =
                             Thread.currentThread().getContextClassLoader();
                         if (parent.getLoader() != null) {
                             cl = parent.getLoader().getClassLoader();
                         }
+                        // 处理容器的孩子节点
                         processChildren(parent, cl);
                     }
                 }
@@ -1683,6 +1686,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             Container[] children = container.findChildren();
             for (int i = 0; i < children.length; i++) {
                 if (children[i].getBackgroundProcessorDelay() <= 0) {
+                    // 递归启动容器的backgroundProcess
                     processChildren(children[i], cl);
                 }
             }
