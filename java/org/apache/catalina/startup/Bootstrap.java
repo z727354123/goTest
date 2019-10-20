@@ -111,6 +111,7 @@ public final class Bootstrap {
             }
 
             // Check for a JAR URL repository
+            // 一个远程的类仓库
             try {
                 @SuppressWarnings("unused")
                 URL url = new URL(repository);
@@ -122,6 +123,7 @@ public final class Bootstrap {
             }
 
             // Local repository
+            // 本地的类仓库
             if (repository.endsWith("*.jar")) {
                 repository = repository.substring
                     (0, repository.length() - "*.jar".length());
@@ -136,6 +138,7 @@ public final class Bootstrap {
             }
         }
 
+        // 基于类仓库类创建一个ClassLoader
         return ClassLoaderFactory.createClassLoader(repositories, parent);
     }
 
