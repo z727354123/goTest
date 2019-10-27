@@ -233,6 +233,7 @@ public final class ClassLoaderFactory {
                     @Override
                     public URLClassLoader run() {
                         if (parent == null)
+                            // URLClassLoader是一个可以从指定目录或网络地址加载class的一个类加载器
                             return new URLClassLoader(array);
                         else
                             return new URLClassLoader(array, parent);

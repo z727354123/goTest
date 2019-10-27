@@ -248,6 +248,7 @@ public class Catalina {
      *
      * @param args Command line arguments to process
      */
+    // 解析命令行输入的参数，所以我们能从这里知道命令行里能添加哪些参数
     protected boolean arguments(String args[]) {
 
         boolean isConfig = false;
@@ -580,8 +581,9 @@ public class Catalina {
         InputStream inputStream = null;
         File file = null;
         try {
+            // 先从文件系统获取server.xml
             try {
-                file = configFile();
+                file = configFile(); // 获取catalina.base目录下的conf/server.xml文件
                 inputStream = new FileInputStream(file);
                 inputSource = new InputSource(file.toURI().toURL().toString());
             } catch (Exception e) {
@@ -589,6 +591,7 @@ public class Catalina {
                     log.debug(sm.getString("catalina.configFail", file), e);
                 }
             }
+            // 如果文件系统没有，则从classloader中获取server.xml
             if (inputStream == null) {
                 try {
                     inputStream = getClass().getClassLoader()
@@ -606,6 +609,7 @@ public class Catalina {
 
             // This should be included in catalina.jar
             // Alternative: don't bother with xml, just create it manually.
+            // 如果没找到server.xml，那么则从classloader中找server-embed.xml
             if( inputStream==null ) {
                 try {
                     inputStream = getClass().getClassLoader()
@@ -621,7 +625,8 @@ public class Catalina {
                 }
             }
 
-
+            // 如果没找到server.xml或server-embed.xml，那么告警
+            // 如果文件存在，判断文件没有可读权限
             if (inputStream == null || inputSource == null) {
                 if  (file == null) {
                     log.warn(sm.getString("catalina.configFail",
@@ -637,6 +642,7 @@ public class Catalina {
             }
 
             try {
+                // 解析server.xml或server-embed.xml文件
                 inputSource.setByteStream(inputStream);
                 digester.push(this);
                 digester.parse(inputSource);
@@ -658,12 +664,15 @@ public class Catalina {
             }
         }
 
+        // 解析完server.xml或server-embed.xml后，将catalina设置到StandardServer中
         getServer().setCatalina(this);
 
         // Stream redirection
+        // 把System.out和System.err替换成SystemLogHandler对象
         initStreams();
 
         // Start the new server
+        // 解析完配置文件，开始初始化Server，而从初始化Server开始，就包括了一系列的子组件的初始化
         try {
             getServer().init();
         } catch (LifecycleException e) {
@@ -749,8 +758,10 @@ public class Catalina {
             }
         }
 
+        // 需要阻塞
         if (await) {
-            await();
+            await();  // 使用ServerSocket来监听shutdown命令来阻塞
+            // 如果阻塞被解开，那么就停止Catalina
             stop();
         }
     }
@@ -764,6 +775,7 @@ public class Catalina {
         try {
             // Remove the ShutdownHook first so that server.stop()
             // doesn't get invoked twice
+            // 如果使用了关闭钩子，那么先移除钩子，避免执行两次
             if (useShutdownHook) {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
 

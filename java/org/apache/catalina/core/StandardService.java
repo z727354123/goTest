@@ -539,13 +539,18 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     @Override
     protected void initInternal() throws LifecycleException {
 
-        super.initInternal();
+        super.initInternal(); // 将StandardService注册到jmx中
 
+        // 将Service下的容器进行初始化，默认情况下是StandardEngine
         if (container != null) {
-            container.init();
+            container.init();   // 注意：这里是Engine，这个流程只会初始化StandardEngine，并没有去初始话Engine下的Host，那么Host是在哪初始化的呢？
+                                // 实际上，对于Host容器，并不需要进行初始化，
         }
 
         // Initialize any Executors
+        // 初始化线程池
+        // 可以在Service下配置定义executor，默认实现类为org.apache.catalina.core.StandardThreadExecutor
+        // 这个初始化只是走了一下生命周期的初始化流程，没有其他作用
         for (Executor executor : findExecutors()) {
             if (executor instanceof LifecycleMBeanBase) {
                 ((LifecycleMBeanBase) executor).setDomain(getDomain());
@@ -554,6 +559,8 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         }
 
         // Initialize our defined Connectors
+        // 初始化连接器
+        // 为什么这里要同步，而上面的container和executor不同步？
         synchronized (connectorsLock) {
             for (Connector connector : connectors) {
                 try {

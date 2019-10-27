@@ -681,7 +681,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * @exception   javax.management.InstanceNotFoundException
      *              if the managed resource object cannot be found
      * @exception   javax.management.MBeanException
-     *              if the initializer of the object throws an exception, or
+     *              if the (init)ializer of the object throws an exception, or
      *              persistence is not supported
      * @exception   javax.management.RuntimeOperationsException
      *              if an exception is reported by the persistence mechanism
@@ -791,15 +791,17 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
     @Override
     protected void initInternal() throws LifecycleException {
 
-        super.initInternal();
+        super.initInternal();  // 将StandardServer实例注册到jmx
 
         // Register global String cache
         // Note although the cache is global, if there are multiple Servers
         // present in the JVM (may happen when embedding) then the same cache
         // will be registered under multiple names
+        // 每个Server下都有一个全局的StringCache
         onameStringCache = register(new StringCache(), "type=StringCache");
 
         // Register the MBeanFactory
+        // MBeanFactory是JMX中用来管理Server的一个对象，通过MBeanFactory可以创建、移除Connector、Host等待
         MBeanFactory factory = new MBeanFactory();
         factory.setContainer(this);
         onameMBeanFactory = register(factory, "type=MBeanFactory");
@@ -809,6 +811,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
         // Populate the extension validator with JARs from common and shared
         // class loaders
+        // 将common和shared类加载器中的jar包中的清单文件添加到容器的清单文件资源池中
         if (getCatalina() != null) {
             ClassLoader cl = getCatalina().getParentClassLoader();
             // Walk the class loader hierarchy. Stop at the system class loader.
@@ -836,6 +839,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             }
         }
         // Initialize our defined Services
+        // service初始化
         for (int i = 0; i < services.length; i++) {
             services[i].init();
         }

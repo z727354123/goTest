@@ -125,6 +125,7 @@ public class StandardEngine extends ContainerBase implements Engine {
      *
      * @return configured realm, or a {@link NullRealm} by default
      */
+    // 如果没有配置Realm，则返回一个NullRealm
     @Override
     public Realm getRealm() {
         Realm configured = super.getRealm();
@@ -277,8 +278,9 @@ public class StandardEngine extends ContainerBase implements Engine {
     protected void initInternal() throws LifecycleException {
         // Ensure that a Realm is present before any attempt is made to start
         // one. This will create the default NullRealm if necessary.
+        // Realm，域对象，用来存储用户、密码、权限等的数据对象，它的存储方式可以是内存、xml、数据库等待，主要作用是配合Tomcat实现资源认证。
         getRealm();
-        super.initInternal();
+        super.initInternal();   // Engine是容器，所以这里会调用ContainerBase的initInternal方法。
     }
 
 

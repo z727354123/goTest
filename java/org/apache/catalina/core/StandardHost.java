@@ -59,6 +59,7 @@ public class StandardHost extends ContainerBase implements Host {
 
     /**
      * Create a new StandardHost component with the default basic Valve.
+     * // 构造StandardHost时设置一下管道的最后一个valve-StandardHostValve
      */
     public StandardHost() {
 
@@ -113,12 +114,14 @@ public class StandardHost extends ContainerBase implements Host {
 
     /**
      * The deploy on startup flag for this Host.
+     * 启动时就部署
      */
     private boolean deployOnStartup = true;
 
 
     /**
      * deploy Context XML config files property.
+     * 如果java安全机制开启了，那么则deployXML为false
      */
     private boolean deployXML = !Globals.IS_SECURITY_ENABLED;
 

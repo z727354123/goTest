@@ -1188,13 +1188,14 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     protected void initInternal() throws LifecycleException {
         BlockingQueue<Runnable> startStopQueue =
             new LinkedBlockingQueue<Runnable>();
+        // 容器的开启、关闭事件处理线程池，跟事件触发有关系？
         startStopExecutor = new ThreadPoolExecutor(
                 getStartStopThreadsInternal(),
                 getStartStopThreadsInternal(), 10, TimeUnit.SECONDS,
                 startStopQueue,
                 new StartStopThreadFactory(getName() + "-startStop-"));
         startStopExecutor.allowCoreThreadTimeOut(true);
-        super.initInternal();
+        super.initInternal();   // 将容器注册到jmx中
     }
 
 

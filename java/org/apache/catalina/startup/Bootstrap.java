@@ -77,11 +77,13 @@ public final class Bootstrap {
 
     private void initClassLoaders() {
         try {
+            // CommonClassLoader是一个公共的类加载器
             commonLoader = createClassLoader("common", null);
             if( commonLoader == null ) {
                 // no config file, default to this loader - we might be in a 'single' env.
                 commonLoader=this.getClass().getClassLoader();
             }
+            // 下面这个两个类加载器默认情况下就是commonLoader
             catalinaLoader = createClassLoader("server", commonLoader);
             sharedLoader = createClassLoader("shared", commonLoader);
         } catch (Throwable t) {
@@ -92,6 +94,13 @@ public final class Bootstrap {
     }
 
 
+    /**
+     *
+     * @param name 是配置项的名字，全名为name.loader，配置项配置了类加载器应该从哪些目录去加载类
+     * @param parent 父级类加载器
+     * @return
+     * @throws Exception
+     */
     private ClassLoader createClassLoader(String name, ClassLoader parent)
         throws Exception {
 
@@ -111,8 +120,8 @@ public final class Bootstrap {
             }
 
             // Check for a JAR URL repository
-            // 一个远程的类仓库
             try {
+                // 从URL上获取Jar包资源
                 @SuppressWarnings("unused")
                 URL url = new URL(repository);
                 repositories.add(
@@ -123,16 +132,18 @@ public final class Bootstrap {
             }
 
             // Local repository
-            // 本地的类仓库
             if (repository.endsWith("*.jar")) {
+                // 表示目录下所有的jar包资源
                 repository = repository.substring
                     (0, repository.length() - "*.jar".length());
                 repositories.add(
                         new Repository(repository, RepositoryType.GLOB));
             } else if (repository.endsWith(".jar")) {
+                // 表示目录下当个的jar包资源
                 repositories.add(
                         new Repository(repository, RepositoryType.JAR));
             } else {
+                // 表示目录下所有资源，包括jar包、class文件、其他类型资源
                 repositories.add(
                         new Repository(repository, RepositoryType.DIR));
             }
@@ -190,6 +201,7 @@ public final class Bootstrap {
 
     /**
      * Initialize daemon.
+     * 主要初始化类加载器，在Tomcat的设计中，使用了很多自定义的类加载器，包括Tomcat自己本身的类会由CommonClassLoader来加载，每个wabapp由特定的类加载器来加载
      */
     public void init()
         throws Exception
@@ -199,13 +211,18 @@ public final class Bootstrap {
         setCatalinaHome();
         setCatalinaBase();
 
+        // 初始化commonLoader、catalinaLoader、sharedLoader
+        // 其中catalinaLoader、sharedLoader默认其实就是commonLoader
         initClassLoaders();
 
+        // 设置线程的所使用的类加载器，默认情况下就是commonLoader
         Thread.currentThread().setContextClassLoader(catalinaLoader);
 
+        // 如果开启了SecurityManager，那么则要提前加载一些类
         SecurityClassLoad.securityClassLoad(catalinaLoader);
 
         // Load our startup class and call its process() method
+        // 加载Catalina类，并生成instance
         if (log.isDebugEnabled())
             log.debug("Loading startup class");
         Class<?> startupClass =
@@ -214,6 +231,7 @@ public final class Bootstrap {
         Object startupInstance = startupClass.newInstance();
 
         // Set the shared extensions class loader
+        // 设置Catalina实例的父级类加载器为sharedLoader(默认情况下就是commonLoader)
         if (log.isDebugEnabled())
             log.debug("Setting startup class properties");
         String methodName = "setParentClassLoader";
@@ -232,6 +250,7 @@ public final class Bootstrap {
 
     /**
      * Load daemon.
+     * 调用Catalina实例的load方法
      */
     private void load(String[] arguments)
         throws Exception {
@@ -350,6 +369,7 @@ public final class Bootstrap {
 
     /**
      * Set flag.
+     * 设置Catalina实例的await标志，该标志表示Catalina启动后是否阻塞住，默认为false
      */
     public void setAwait(boolean await)
         throws Exception {
@@ -426,8 +446,8 @@ public final class Bootstrap {
                 args[args.length - 1] = "stop";
                 daemon.stop();
             } else if (command.equals("start")) {
-                daemon.setAwait(true);
-                daemon.load(args);
+                daemon.setAwait(true);  // 设置阻塞标志
+                daemon.load(args);      // 初始化Catalina
                 daemon.start();
                 if (null == daemon.getServer()) {
                     System.exit(1);

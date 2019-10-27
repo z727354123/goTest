@@ -224,10 +224,12 @@ public final class ExtensionValidator {
      * @param jarFile The system JAR whose manifest to add
      * @throws IOException Error reading JAR file
      */
+    // 把jar包中的清单文件加入到容器的清单文件资源池中
     public static void addSystemResource(File jarFile) throws IOException {
         InputStream is = null;
         try {
             is = new FileInputStream(jarFile);
+            //
             Manifest manifest = getManifest(is);
             if (manifest != null) {
                 ManifestResource mre = new ManifestResource(jarFile.getAbsolutePath(), manifest,
