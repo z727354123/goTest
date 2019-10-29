@@ -50,6 +50,14 @@ import java.beans.PropertyChangeListener;
  * </ul>
  *
  * @author Craig R. McClanahan
+ *
+ * 一个Loader代表一个类加载器实现，容器可以使用它来加载类文件（这些文件在与Loader关联的的仓库中），这些文件可以根据请求来重新加载，Loader也提供了一种可以监控仓库中的文件是否发生改变的机制
+ * 为了让Loader成功的实现Context的热部署功能，它必遵守一下约束：
+ * 1.一个Loader必须实现Lifecycle接口，以便Context能够告诉需要一个新的类加载器
+ * 2. start()方法必须无条件创建一个新的类加载器实现
+ * 3. stop()方法必须丢弃该类加载器之前所用到的引用，以便所有被加载的类和对象能被垃圾回收掉
+ * 4. 必须允许在同一个Loader实例上先调用start()，然后调用stop()。
+ * 5. 检测到对此类加载器加载的一个或多个类文件进行更改时，必须在Loader所属的Context上调用Context.reload（）方法。
  */
 
 public interface Loader {

@@ -288,18 +288,23 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      * see {@link WebappLoader#createClassLoader()}
      *
      * @param parent Our parent class loader
+     *
+     * 以给定的父类构造一个类加载器，该类加载器没有定义仓库
+     * 通过反射来调用这个构造方法
      */
     public WebappClassLoaderBase(ClassLoader parent) {
 
+        // new一个URLClassLoader，传入一个空的URL数组
         super(new URL[0], parent);
 
+        // 获取当前类加载器的父加载器，就是传进来的parent
         ClassLoader p = getParent();
         if (p == null) {
             p = getSystemClassLoader();
         }
         this.parent = p;
 
-        ClassLoader j = String.class.getClassLoader();
+        ClassLoader j = String.class.getClassLoader(); // java.lang.String是由BootstrapClassLoader加载的，所以一般都会返回null
         if (j == null) {
             j = getSystemClassLoader();
             while (j.getParent() != null) {

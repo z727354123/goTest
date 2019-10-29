@@ -139,6 +139,7 @@ public class ContextRuleSet extends RuleSetBase {
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
 
+        // 类加载器
         digester.addObjectCreate(prefix + "Context/Loader",
                             "org.apache.catalina.loader.WebappLoader",
                             "className");

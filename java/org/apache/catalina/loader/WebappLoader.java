@@ -568,6 +568,7 @@ public class WebappLoader extends LifecycleMBeanBase
         if (log.isDebugEnabled())
             log.debug(sm.getString("webappLoader.starting"));
 
+        // 获取容器命名资源
         if (container.getResources() == null) {
             log.info("No resources for " + container);
             setState(LifecycleState.STARTING);
@@ -595,7 +596,7 @@ public class WebappLoader extends LifecycleMBeanBase
         // Construct a class loader based on our current repositories list
         try {
 
-            classLoader = createClassLoader();
+            classLoader = createClassLoader(); // 创建一个WebappClassLoader
             classLoader.setJarOpenInterval(this.jarOpenInterval);
             classLoader.setResources(container.getResources());
             classLoader.setDelegate(this.delegate);
@@ -740,13 +741,17 @@ public class WebappLoader extends LifecycleMBeanBase
      */
     private WebappClassLoaderBase createClassLoader()
         throws Exception {
+        // 创建一个类加载器WebappClassLoader
 
         Class<?> clazz = Class.forName(loaderClass);
         WebappClassLoaderBase classLoader = null;
 
         if (parentClassLoader == null) {
+            // 父加载器为容器得父加载器
             parentClassLoader = container.getParentClassLoader();
         }
+
+        // 下面的代码相当于 classLoader = new WebappClassLoader(parentClassLoader);
         Class<?>[] argTypes = { ClassLoader.class };
         Object[] args = { parentClassLoader };
         Constructor<?> constr = clazz.getConstructor(argTypes);
