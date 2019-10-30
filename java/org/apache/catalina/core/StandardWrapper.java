@@ -72,6 +72,8 @@ import org.apache.tomcat.util.modeler.Util;
  * an individual servlet definition.  No child Containers are allowed, and
  * the parent Container must be a Context.
  *
+ * Wrapper接口的标准实现，表示一个Servlet，不允许有子容器，并且父容器一定要是一个Context
+ *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  */
@@ -95,6 +97,7 @@ public class StandardWrapper extends ContainerBase
         super();
         swValve=new StandardWrapperValve();
         pipeline.setBasic(swValve);
+        // 广播
         broadcaster = new NotificationBroadcasterSupport();
 
     }

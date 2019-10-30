@@ -382,6 +382,7 @@ public class StandardContext extends ContainerBase
     /**
      * The "follow standard delegation model" flag that will be used to
      * configure our ClassLoader.
+     * 遵循标准委托模型，遵守双亲委派
      */
     private boolean delegate = false;
 
@@ -667,6 +668,7 @@ public class StandardContext extends ContainerBase
     /**
      * The pathname to the work directory for this context (relative to
      * the server's home if not absolute).
+     * 工作目录，work文件夹
      */
     private String workDir = null;
 
@@ -2720,14 +2722,17 @@ public class StandardContext extends ContainerBase
 
         if (resources instanceof BaseDirContext) {
             // Caching
+            // 设置FileDirContext或WARDirContext的缓存参数，是否允许缓存、缓存过期时间、缓存空间的最大限制，缓存对象的最大限制
             ((BaseDirContext) resources).setCached(isCachingAllowed());
             ((BaseDirContext) resources).setCacheTTL(getCacheTTL());
             ((BaseDirContext) resources).setCacheMaxSize(getCacheMaxSize());
             ((BaseDirContext) resources).setCacheObjectMaxSize(
                     getCacheObjectMaxSize());
             // Alias support
+            // Context的别名
             ((BaseDirContext) resources).setAliases(getAliases());
         }
+        // FileDirContext其实也是BaseDirContext的一种，如果是文件目录，设置一下是否允许软链接
         if (resources instanceof FileDirContext) {
             filesystemBased = true;
             ((FileDirContext) resources).setAllowLinking(isAllowLinking());
@@ -5315,8 +5320,11 @@ public class StandardContext extends ContainerBase
         env.put(ProxyDirContext.CONTEXT, getName());
 
         try {
+         // 一个DirContext的代理对象
             ProxyDirContext proxyDirContext =
                 new ProxyDirContext(env, webappResources);
+
+            // 为什么又重新设置一下webappResources？
             if (webappResources instanceof FileDirContext) {
                 filesystemBased = true;
                 ((FileDirContext) webappResources).setAllowLinking
@@ -5338,7 +5346,9 @@ public class StandardContext extends ContainerBase
                         DirContext webInfCtx =
                             (DirContext) webappResources.lookup(
                                     "/WEB-INF/classes");
+
                         // Do the lookup to make sure it exists
+                        // 如果找到META-INF/resources目录，则会继续往下走，没找到则会抛异常
                         webInfCtx.lookup("META-INF/resources");
                         ((BaseDirContext) webappResources).addAltDirContext(
                                 webInfCtx);
@@ -5348,6 +5358,7 @@ public class StandardContext extends ContainerBase
                 }
             }
             // Register the cache in JMX
+            // 将Context对应的缓存注册到JMX中
             if (isCachingAllowed() && proxyDirContext.getCache() != null) {
                 String contextName = getName();
                 if (!contextName.startsWith("/")) {
@@ -5499,13 +5510,19 @@ public class StandardContext extends ContainerBase
             if (log.isDebugEnabled())
                 log.debug("Configuring default Resources");
             try {
+             // 设置Context的资源
+             // 赋值webappResources属性
+
+             // docBase地址
                 String docBase = getDocBase();
                 if (docBase == null) {
                     setResources(new EmptyDirContext());
                 } else if (docBase.endsWith(".war")
                         && !(new File(getBasePath())).isDirectory()) {
+                 // war包
                     setResources(new WARDirContext());
                 } else {
+                 // 文件目录
                     setResources(new FileDirContext());
                 }
             } catch (IllegalArgumentException e) {
@@ -5519,6 +5536,11 @@ public class StandardContext extends ContainerBase
             }
         }
 
+        // 如果在Context节点下配置了Loader节点，那么就会在解析配置文件的时候就会初始化Loader,比如：
+//        <Context path="/ServletDemo" docBase="C:\Users\周瑜\IdeaProjects\ServletDemo\target\ServletDemo" addWebinfClassesResources="true">
+//            <Loader/>
+//        </Context>
+     // 如果没有配，则生成一个WebappLoader
         if (getLoader() == null) {
             WebappLoader webappLoader = new WebappLoader(getParentClassLoader());
             webappLoader.setDelegate(getDelegate());
@@ -5526,9 +5548,11 @@ public class StandardContext extends ContainerBase
         }
 
         // Initialize character set mapper
+        // 设置CharsetMapper，CharsetMapperDefault.properties
         getCharsetMapper();
 
         // Post work directory
+        // 创建work目录，比如work\Catalina\localhost\ServletDemo
         postWorkDirectory();
 
         // Validate required extensions
@@ -5569,6 +5593,7 @@ public class StandardContext extends ContainerBase
 
 
         // Binding thread
+        // 将当前线程的类加载器设置为WebClassLoader
         ClassLoader oldCCL = bindThread();
 
         try {
@@ -5576,7 +5601,7 @@ public class StandardContext extends ContainerBase
             if (ok) {
 
                 // Start our subordinate components, if any
-                Loader loader = getLoaderInternal();
+                Loader loader = getLoaderInternal(); // 获取Context的类加载器
                 if ((loader != null) && (loader instanceof Lifecycle))
                     ((Lifecycle) loader).start();
 
@@ -6244,9 +6269,11 @@ public class StandardContext extends ContainerBase
         ClassLoader oldContextClassLoader =
             Thread.currentThread().getContextClassLoader();
 
+        // 如果Context没有DirContext，其实这个Context也没什么用
         if (getResources() == null)
             return oldContextClassLoader;
 
+        // 设置线程的ClassLoader
         if (getLoader() != null && getLoader().getClassLoader() != null) {
             Thread.currentThread().setContextClassLoader
                 (getLoader().getClassLoader());

@@ -568,7 +568,7 @@ public class WebappLoader extends LifecycleMBeanBase
         if (log.isDebugEnabled())
             log.debug(sm.getString("webappLoader.starting"));
 
-        // 获取容器命名资源
+        // 获取容器的文件Context--DirContext,如果为空，证明Context没有有用的内容
         if (container.getResources() == null) {
             log.info("No resources for " + container);
             setState(LifecycleState.STARTING);
@@ -860,6 +860,8 @@ public class WebappLoader extends LifecycleMBeanBase
     /**
      * Configure the repositories for our class loader, based on the
      * associated Context.
+     * 基于Context配置类加载器的仓库
+     *
      * @throws IOException
      */
     private void setRepositories() throws IOException {
@@ -882,8 +884,10 @@ public class WebappLoader extends LifecycleMBeanBase
         if( log.isDebugEnabled() && workDir != null)
             log.debug(sm.getString("webappLoader.deploy", workDir.getAbsolutePath()));
 
+        // 设置类加载器的工作目录
         classLoader.setWorkDir(workDir);
 
+        // 获取Context对应的文件目录DirContext
         DirContext resources = container.getResources();
 
         // Setting up the class repository (/WEB-INF/classes), if it exists
@@ -892,6 +896,7 @@ public class WebappLoader extends LifecycleMBeanBase
         DirContext classes = null;
 
         try {
+            // 从文件目录DirContext查找"/WEB-INF/classes"文件目录
             Object object = resources.lookup(classesPath);
             if (object instanceof DirContext) {
                 classes = (DirContext) object;
@@ -933,6 +938,7 @@ public class WebappLoader extends LifecycleMBeanBase
 
 
             // Adding the repository to the class loader
+            // 将"/WEB-INF/classes"目录添加到类加载器仓库中
             classLoader.addRepository(classesPath + "/", classRepository);
             loaderRepositories.add(classesPath + "/" );
 
@@ -942,6 +948,7 @@ public class WebappLoader extends LifecycleMBeanBase
 
         String libPath = "/WEB-INF/lib";
 
+        // 设置类加载器的jar包路径
         classLoader.setJarPath(libPath);
 
         DirContext libDir = null;
@@ -983,6 +990,8 @@ public class WebappLoader extends LifecycleMBeanBase
                 ioe.initCause(e);
                 throw ioe;
             }
+
+            // 便利"/WEB-INF/lib"目录下的jar包
             while (enumeration.hasMoreElements()) {
                 NameClassPair ncPair = enumeration.nextElement();
                 String filename = libPath + "/" + ncPair.getName();
@@ -1027,6 +1036,7 @@ public class WebappLoader extends LifecycleMBeanBase
 
                 try {
                     JarFile jarFile = JreCompat.getInstance().jarFileNewInstance(destFile);
+                    // 把jar添加到类加载器中
                     classLoader.addJar(filename, jarFile, destFile);
                 } catch (Exception ex) {
                     // Catch the exception if there is an empty jar file

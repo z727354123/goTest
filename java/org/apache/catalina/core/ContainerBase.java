@@ -1194,7 +1194,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     protected void initInternal() throws LifecycleException {
         BlockingQueue<Runnable> startStopQueue =
             new LinkedBlockingQueue<Runnable>();
-        // 容器的开启、关闭事件处理线程池，跟事件触发有关系？
+        // 开启、停止容器的线程池
         startStopExecutor = new ThreadPoolExecutor(
                 getStartStopThreadsInternal(),
                 getStartStopThreadsInternal(), 10, TimeUnit.SECONDS,
@@ -1241,6 +1241,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             ((Lifecycle) resources).start();
 
         // Start our child containers, if any
+        // 启动子容器，如果有的话，并且是通过异步启动的
         Container children[] = findChildren();
         List<Future<Void>> results = new ArrayList<Future<Void>>();
         for (int i = 0; i < children.length; i++) {

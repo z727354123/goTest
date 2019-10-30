@@ -299,6 +299,7 @@ public class StandardEngine extends ContainerBase implements Engine {
             log.info( "Starting Servlet Engine: " + ServerInfo.getServerInfo());
 
         // Standard container startup
+        // 调用ContainerBase的startInternal，以异步的方式启动子容器
         super.startInternal();
     }
 

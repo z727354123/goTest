@@ -741,6 +741,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * Start nested components ({@link Service}s) and implement the requirements
      * of {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
      *
+     * 没什么特殊逻辑，就是启动Service
+     *
      * @exception LifecycleException if this component detects a fatal error
      *  that prevents this component from being used
      */

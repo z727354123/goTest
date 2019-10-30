@@ -171,6 +171,7 @@ public abstract class BaseDirContext implements DirContext {
 
     /**
      * Add an alternative DirContext (must contain META-INF/resources) directly.
+     * 添加一个替代的DirContext
      */
     public void addAltDirContext(DirContext altDirContext) {
         altDirContexts.add(altDirContext);
@@ -491,7 +492,7 @@ public abstract class BaseDirContext implements DirContext {
         }
 
         // Next do a standard lookup
-        Object obj = doLookup(name);
+        Object obj = doLookup(name); //找到name对应的对象，比如文件目录就是一个FileDirContext
 
         if (obj != null) {
             return obj;
