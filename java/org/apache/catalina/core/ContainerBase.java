@@ -999,6 +999,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         }
     }
 
+    /**
+     * 添加子容器到父容器中，比如把Wrapper添加到Context中
+     * @param child
+     */
     private void addChildInternal(Container child) {
 
         if( log.isDebugEnabled() )

@@ -448,13 +448,14 @@ public class HostConfig
         return (digester);
     }
 
+    // 返回catalina.base/path
     protected File returnCanonicalPath(String path) {
         File file = new File(path);
         File base = new File(System.getProperty(Globals.CATALINA_BASE_PROP));
         if (!file.isAbsolute())
             file = new File(base,path);
         try {
-            return file.getCanonicalFile();
+                return file.getCanonicalFile();
         } catch (IOException e) {
             return file;
         }

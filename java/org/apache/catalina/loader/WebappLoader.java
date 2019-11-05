@@ -625,17 +625,19 @@ public class WebappLoader extends LifecycleMBeanBase
             }
 
             // Configure our repositories
-            setRepositories();
-            setClassPath();
+            setRepositories();  // 设置类加载器的拥有的class和jar，就是/WEB-INF/classes和/WEB-INF/lib目录下
+            setClassPath(); // 把当前类加载器或者父加载器所能加载的class和jar当做classpath
 
             setPermissions();
 
-            ((Lifecycle) classLoader).start();
+            ((Lifecycle) classLoader).start();  // 启动WebappClassLoader，调用WebappClassLoaderBase.start()，赋值webInfClassesCodeBase属性
 
             // Binding the Webapp class loader to the directory context
+            // 类加载到DirContext的一个映射关系
             DirContextURLStreamHandler.bind(classLoader,
                     this.container.getResources());
 
+            // 注册jmx
             StandardContext ctx=(StandardContext)container;
             String contextName = ctx.getName();
             if (!contextName.startsWith("/")) {

@@ -3503,11 +3503,16 @@ public class StandardContext extends ContainerBase
      *
      * @exception IllegalArgumentException if the specified servlet name
      *  is not known to this Context
+     *
+     *  增加Servlet映射关系
+     *  pattern是url匹配规则
+     *  name是servlet名称
      */
     @Override
     public void addServletMapping(String pattern, String name,
                                   boolean jspWildCard) {
         // Validate the proposed mapping
+        //
         if (findChild(name) == null)
             throw new IllegalArgumentException
                 (sm.getString("standardContext.servletMap.name", name));
@@ -3633,6 +3638,8 @@ public class StandardContext extends ContainerBase
      * the Java implementation class appropriate for this Context
      * implementation.  The constructor of the instantiated Wrapper
      * will have been called, but no properties will have been set.
+     *
+     * 创建一个Wrapper
      */
     @Override
     public Wrapper createWrapper() {
@@ -5603,7 +5610,7 @@ public class StandardContext extends ContainerBase
                 // Start our subordinate components, if any
                 Loader loader = getLoaderInternal(); // 获取Context的类加载器
                 if ((loader != null) && (loader instanceof Lifecycle))
-                    ((Lifecycle) loader).start();
+                    ((Lifecycle) loader).start();   // 启动类加载器，包括初始话DirContext
 
                 // since the loader just started, the webapp classloader is now
                 // created.
@@ -5628,9 +5635,12 @@ public class StandardContext extends ContainerBase
                     ((Lifecycle) resources).start();
 
                 // Notify our interested LifecycleListeners
+                // 这里会发布一个CONFIGURE_START_EVENT事件，ContextConfig会接收到此事件
                 fireLifecycleEvent(Lifecycle.CONFIGURE_START_EVENT, null);
 
                 // Start our child containers, if not already started
+                // Context下是Wrapper，这些Wrapper是什么时候添加进Context中的？就是上面的CONFIGURE_START_EVENT事件触发的
+                // 启动Wrapper
                 for (Container child : findChildren()) {
                     if (!child.getState().isAvailable()) {
                         child.start();
@@ -5639,6 +5649,7 @@ public class StandardContext extends ContainerBase
 
                 // Start the Valves in our pipeline (including the basic),
                 // if any
+                // 启动pipeline
                 if (pipeline instanceof Lifecycle) {
                     ((Lifecycle) pipeline).start();
                 }

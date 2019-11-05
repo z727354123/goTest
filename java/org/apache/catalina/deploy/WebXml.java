@@ -1399,6 +1399,7 @@ public class WebXml {
         for (ContextService service : serviceRefs.values()) {
             context.getNamingResources().addService(service);
         }
+        // 遍历所有的servlet,创建wrapper
         for (ServletDef servlet : servlets.values()) {
             Wrapper wrapper = context.createWrapper();
             // Description is ignored

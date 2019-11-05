@@ -2159,6 +2159,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         for (int i = 0; i < repositories.length; i++) {
             if (repositories[i].equals("/WEB-INF/classes/")) {
                 try {
+                    // 将/WEB-INF/classes/转变成URL对象，并赋值给webInfClassesCodeBase
                     webInfClassesCodeBase = files[i].toURI().toURL();
                 } catch (MalformedURLException e) {
                     // Ignore - leave it as null

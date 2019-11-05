@@ -385,6 +385,7 @@ public class ContextConfig implements LifecycleListener {
 
         // Process the event that has occurred
         if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
+            // StandardContext在启动时就会触发此事件
             configureStart();
         } else if (event.getType().equals(Lifecycle.BEFORE_START_EVENT)) {
             beforeStart();
@@ -555,9 +556,13 @@ public class ContextConfig implements LifecycleListener {
     }
 
 
+    // 先获取Engine上配置的baseDir
+    // 如果Engine上没有配置baseDir，那么则获取环境变量catalina.base所指定的路径
+    // 如果catalina.base没有指定路径，那么则获取环境变量catalina.home所指定的路径
     protected String getBaseDir() {
         Container engineC=context.getParent().getParent();
         if( engineC instanceof StandardEngine ) {
+            // 注意getBaseDir()方法内的实现
             return ((StandardEngine)engineC).getBaseDir();
         }
         return System.getProperty(Globals.CATALINA_BASE_PROP);
@@ -568,19 +573,31 @@ public class ContextConfig implements LifecycleListener {
      * Process the default configuration file, if it exists.
      */
     protected void contextConfig(Digester digester) {
+        // 可以单独使用文件的方式配置Context的属性
+        // 1. 在Context节点上可以配置defaultContextXml属性，指明配置context.xml文件的位置
+        // 2. 默认情况下会取catalina.base/conf/context.xml
+        // 3. 默认情况下也会取catalina.base/conf/engine名称/host名称/context.xml.default文件
+        // 4. 取catalina.base/conf/engine名称/host名称/Context名称.xml
 
         // Open the default context.xml file, if it exists
+        // 先看Context节点上是否配置了defaultContextXml属性
         if( defaultContextXml==null && context instanceof StandardContext ) {
             defaultContextXml = ((StandardContext)context).getDefaultContextXml();
         }
         // set the default if we don't have any overrides
+        // 如果Context节点上没有配置defaultContextXml属性的话，那么则取默认值conf/context.xml
         if( defaultContextXml==null ) getDefaultContextXml();
 
+        // 如果
         if (!context.getOverride()) {
             File defaultContextFile = new File(defaultContextXml);
+            // defaultContextXml如果是相对于路径，那么则相对于getBaseDir()
+            // 所以默认请求情况下就是取得catalina.base路径下得conf/context.xml
             if (!defaultContextFile.isAbsolute()) {
                 defaultContextFile =new File(getBaseDir(), defaultContextXml);
             }
+
+            // 解析context.xml文件
             if (defaultContextFile.exists()) {
                 try {
                     URL defaultContextUrl = defaultContextFile.toURI().toURL();
@@ -591,7 +608,9 @@ public class ContextConfig implements LifecycleListener {
                 }
             }
 
+            // 取Host级别下的context.xml.default文件
             File hostContextFile = new File(getHostConfigBase(), Constants.HostContextXml);
+            // 解析context.xml.default文件
             if (hostContextFile.exists()) {
                 try {
                     URL hostContextUrl = hostContextFile.toURI().toURL();
@@ -602,9 +621,13 @@ public class ContextConfig implements LifecycleListener {
                 }
             }
         }
-        if (context.getConfigFile() != null)
-            processContextConfig(digester, context.getConfigFile());
 
+        // configFile属性是在Tomcat部署应用时设置的，对应的文件比如：catalina.base\conf\Catalina\localhost\ContextName.xml
+        // 解析configFile文件
+        if (context.getConfigFile() != null) {
+            System.out.println(context.getConfigFile());
+            processContextConfig(digester, context.getConfigFile());
+        }
     }
 
 
@@ -839,6 +862,7 @@ public class ContextConfig implements LifecycleListener {
         context.setConfigured(false);
         ok = true;
 
+        // 解析context.xml文件，注意，并不是<Context>节点，<Context>节点在解析Server.xml的时候就被解析了
         contextConfig(contextDigester);
 
         createWebXmlDigester(context.getXmlNamespaceAware(),
@@ -878,8 +902,10 @@ public class ContextConfig implements LifecycleListener {
                     Boolean.valueOf(context.getXmlNamespaceAware())));
         }
 
+        // 根据web.xml文件对Context进行配置
         webConfig();
 
+        // 根据注解对Context进行配置
         if (!context.getIgnoreAnnotations()) {
             applicationAnnotationsConfig();
         }
@@ -888,6 +914,7 @@ public class ContextConfig implements LifecycleListener {
         }
 
         // Configure an authenticator if we need one
+        // 用户验证配置
         if (ok)
             authenticatorConfig();
 
@@ -907,6 +934,7 @@ public class ContextConfig implements LifecycleListener {
         }
 
         // Make our application available if no problems were encountered
+        // Context已经配置成功，可以使用了
         if (ok)
             context.setConfigured(true);
         else {
@@ -1176,11 +1204,17 @@ public class ContextConfig implements LifecycleListener {
         return configBase;
     }
 
+    // 确定Host配置文件基本路径----就是我要找某个配置文件时，要从这个目录下去找
+    // 步骤如下：
+    // 1. 如果Host上配置了xmlBase属性，并且该属性是绝对路径的话，将直接以该路径作为基本路径
+    // 2. 如果Host上配置的xmlBase属性是相对路径，那么将以getBaseDir()+xmlBase做为基本路径
+    // 3. 如果Host上没有配置xmlBase属性，那么将以getBaseDir() + "/conf" + engine名字 + "/" + host名字作为基本路径
     protected File getHostConfigBase() {
         File file = null;
         Container container = context;
         Host host = null;
         Engine engine = null;
+        // 赋值host和engine
         while (container != null) {
             if (container instanceof Host) {
                 host = (Host)container;
@@ -1190,6 +1224,7 @@ public class ContextConfig implements LifecycleListener {
             }
             container = container.getParent();
         }
+        // 如果host配置了xmlBase
         if (host != null && host.getXmlBase()!=null) {
             String xmlBase = host.getXmlBase();
             file = new File(xmlBase);
@@ -1203,9 +1238,11 @@ public class ContextConfig implements LifecycleListener {
             if (host != null) {
                 result.append(host.getName()).append('/');
             }
+            // 如果host没有配置xmlBase，那么则获取getBaseDir()下conf目录下的--engine名字+"/"+host名字--的配置文件
             file = new File (getConfigBase(), result.toString());
         }
         try {
+            // 返回绝对路径
             return file.getCanonicalFile();
         } catch (IOException e) {
             return file;
@@ -1218,6 +1255,8 @@ public class ContextConfig implements LifecycleListener {
      * where there is duplicate configuration, the most specific level wins. ie
      * an application's web.xml takes precedence over the host level or global
      * web.xml file.
+     *
+     * 应用程序的web.xml优先于主机级别或全局级别的
      */
     protected void webConfig() {
         /*
@@ -1411,20 +1450,22 @@ public class ContextConfig implements LifecycleListener {
         javaClassCache.clear();
     }
 
-
+    // 这个方法主要将web.xml文件转化为WebXml对象
     private WebXml getDefaultWebXmlFragment() {
 
         // Host should never be null
         Host host = (Host) context.getParent();
 
+        // 从缓存里面获取WebXml对象
         DefaultWebXmlCacheEntry entry = hostWebXmlCache.get(host);
 
-        InputSource globalWebXml = getGlobalWebXmlSource();
-        InputSource hostWebXml = getHostWebXmlSource();
+        InputSource globalWebXml = getGlobalWebXmlSource(); // 获取全局范围内的web.xml文件InputSource，在默认情况下就是取catalina.base目录下的conf/web.xml文件
+        InputSource hostWebXml = getHostWebXmlSource();     // 获取Host范围内的web.xml文件InputSource，在默认情况下就是取catalina.base目录下的conf/engine名字/host名字/web.xml.default
 
         long globalTimeStamp = 0;
         long hostTimeStamp = 0;
 
+        // 寻找globalWebXml文件的最近修改时间
         if (globalWebXml != null) {
             URLConnection uc = null;
             try {
@@ -1445,6 +1486,7 @@ public class ContextConfig implements LifecycleListener {
             }
         }
 
+        // 寻找hostWebXml文件的最近修改时间
         if (hostWebXml != null) {
             URLConnection uc = null;
             try {
@@ -1465,6 +1507,7 @@ public class ContextConfig implements LifecycleListener {
             }
         }
 
+        // 如果发现找出来的webxml文件和缓存中的webxml文件最近的修改时间相等，就代表没有修改过，那么直接返回缓存中的WebXml对象
         if (entry != null && entry.getGlobalTimeStamp() == globalTimeStamp &&
                 entry.getHostTimeStamp() == hostTimeStamp) {
             InputSourceUtil.close(globalWebXml);
@@ -1475,13 +1518,16 @@ public class ContextConfig implements LifecycleListener {
         // Parsing global web.xml is relatively expensive. Use a sync block to
         // make sure it only happens once. Use the pipeline since a lock will
         // already be held on the host by another thread
+        // 解析web.xml文件比较耗时。使用同步块确保只会执行一次。为什么用host.getPipeline()作为锁？
         synchronized (host.getPipeline()) {
+            // 再一次判断是不是可以直接返回缓存中的WebXML对象，这里使用的是双重判断检查
             entry = hostWebXmlCache.get(host);
             if (entry != null && entry.getGlobalTimeStamp() == globalTimeStamp &&
                     entry.getHostTimeStamp() == hostTimeStamp) {
                 return entry.getWebXml();
             }
 
+            // 解析web.xml为WebXml对象
             WebXml webXmlDefaultFragment = createWebXml();
             webXmlDefaultFragment.setOverridable(true);
             // Set to distributable else every app will be prevented from being
@@ -1684,8 +1730,27 @@ public class ContextConfig implements LifecycleListener {
     /**
      * Identify the default web.xml to be used and obtain an input source for
      * it.
+     *
+     * 查找全局webxml文件的流程:
+     * 1. 先确定查找的目录
+     * 2. 再确定查找的文件名
+     *
+     * 确定查找目录：
+     * 1. 如果在Engine上配置了baseDir属性，那么将直接在属性对应的目录下查找
+     * 2. 如果在Engine上没有配置baseDir属性，那么将在catalina.base所对应的目录下查找
+     * 3. 如果catalina.base为空，那么将在catalina.home所对应的目录下查找
+     *
+     * 查找并不是直接找目录下的web.xml文件，而是：
+     * 1. 如果Context配置了defaultWebXml属性，那么将查找该属性所对应的文件，前提是该属性配置的是相对路径
+     * 2. 如果Context配置的defaultWebXml属性是绝对路径，那么将直接取该绝对路径所对应的文件
+     * 3. 如果Context没有配置defaultWebXml属性，那么将查找conf/web.xml
+     *
      */
     protected InputSource getGlobalWebXmlSource() {
+        // 首先获取Context上有没有指定defaultWebXml
+        // 如果没有，则获取conf/web.xml目录下的文件
+        // 将文件转化为InputSource，后续会解析xml
+
         // Is a default web.xml specified for the Context?
         if (defaultWebXml == null && context instanceof StandardContext) {
             defaultWebXml = ((StandardContext) context).getDefaultWebXml();
@@ -1704,12 +1769,15 @@ public class ContextConfig implements LifecycleListener {
     /**
      * Identify the host web.xml to be used and obtain an input source for
      * it.
+     *  1. 如果Host上配置了xmlBase属性，并且该属性是绝对路径的话，将直接把该路径下的web.xml.default文件返回
+     *  2. 如果Host上配置的xmlBase属性是相对路径，那么将把getBaseDir()+xmlBase路径下的web.xml.default文件返回
+     *  3. 如果Host上没有配置xmlBase属性，那么将把getBaseDir() + "/conf" + engine名字 + "/" + host名字路径下的web.xml.default文件返回
      */
     protected InputSource getHostWebXmlSource() {
         File hostConfigBase = getHostConfigBase();
         if (!hostConfigBase.exists())
             return null;
-
+        // 获取hostConfigBase下的web.xml.default
         return getWebXmlSource(Constants.HostWebXml, hostConfigBase.getPath());
     }
 
@@ -1780,6 +1848,7 @@ public class ContextConfig implements LifecycleListener {
      */
     protected InputSource getWebXmlSource(String filename, String path) {
         File file = new File(filename);
+        // 如果filename是相对路径
         if (!file.isAbsolute()) {
             file = new File(path, filename);
         }

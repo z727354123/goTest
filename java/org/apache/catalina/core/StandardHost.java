@@ -244,7 +244,6 @@ public class StandardHost extends ContainerBase implements Host {
      */
     @Override
     public String getXmlBase() {
-
         return (this.xmlBase);
 
     }

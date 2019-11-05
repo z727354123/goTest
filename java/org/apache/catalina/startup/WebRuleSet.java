@@ -366,8 +366,10 @@ public class WebRuleSet extends RuleSetBase {
         digester.addCallMethod(fullPrefix + "/security-role/role-name",
                                "addSecurityRole", 0);
 
+        // 在解析servlet节点时，会new一个ServletDef对象
         digester.addRule(fullPrefix + "/servlet",
                          new ServletDefCreateRule());
+        // 调用WebXml的addServlet方法，参数为ServletDef
         digester.addSetNext(fullPrefix + "/servlet",
                             "addServlet",
                             "org.apache.catalina.deploy.ServletDef");
@@ -396,8 +398,10 @@ public class WebRuleSet extends RuleSetBase {
         digester.addCallMethod(fullPrefix + "/servlet/security-role-ref/role-name",
                                "setName", 0);
 
+        // 调用ServletDef对象的setServletClass方法
         digester.addCallMethod(fullPrefix + "/servlet/servlet-class",
                               "setServletClass", 0);
+        // 调用ServletDef对象的setServletName方法
         digester.addCallMethod(fullPrefix + "/servlet/servlet-name",
                               "setServletName", 0);
 
@@ -420,7 +424,7 @@ public class WebRuleSet extends RuleSetBase {
         digester.addCallMethod(fullPrefix + "/servlet/enabled",
                                "setEnabled", 0);
 
-
+        // 调用WebXml的addServletMapping方法
         digester.addRule(fullPrefix + "/servlet-mapping",
                                new CallMethodMultiRule("addServletMapping", 2, 0));
         digester.addCallParam(fullPrefix + "/servlet-mapping/servlet-name", 1);
