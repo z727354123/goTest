@@ -497,27 +497,34 @@ public final class Mapper {
      *   and the mapping path contains a wildcard; false otherwise
      * @param resourceOnly true if this wrapper always expects a physical
      *                     resource to be present (such as a JSP)
+     *
+     *  将urlPattern和StandardWrapper封装成Mapper中的Wrapper，然后保存在Mapper中的ContextVersion中
      */
     protected void addWrapper(ContextVersion context, String path,
             Object wrapper, boolean jspWildCard, boolean resourceOnly) {
 
         synchronized (context) {
-            if (path.endsWith("/*")) {
+            if (path.endsWith("/*")) {  // 比如/test/*
                 // Wildcard wrapper
+                // 通配符Wrapper，
                 String name = path.substring(0, path.length() - 2);
+                // 这里的两个Wrapper都表示Servlet包装器，不同的是，一个是只用来记录映射关系，一个是真正的StandardWrapper
                 Wrapper newWrapper = new Wrapper(name, wrapper, jspWildCard,
                         resourceOnly);
+
+                // 如果在老的wildcardWrappers中不存在相同name的，则把新的通配符wrapper插入到数组中
                 Wrapper[] oldWrappers = context.wildcardWrappers;
                 Wrapper[] newWrappers =
                     new Wrapper[oldWrappers.length + 1];
                 if (insertMap(oldWrappers, newWrappers, newWrapper)) {
                     context.wildcardWrappers = newWrappers;
-                    int slashCount = slashCount(newWrapper.name);
+                    int slashCount = slashCount(newWrapper.name);   // 一个url被"/"切分为几个部分
+                    // 记录当前Context中url按"/"切分后长度最大的长度
                     if (slashCount > context.nesting) {
                         context.nesting = slashCount;
                     }
                 }
-            } else if (path.startsWith("*.")) {
+            } else if (path.startsWith("*.")) { // 比如*.jsp
                 // Extension wrapper
                 String name = path.substring(2);
                 Wrapper newWrapper = new Wrapper(name, wrapper, jspWildCard,

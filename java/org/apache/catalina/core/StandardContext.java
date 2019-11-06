@@ -3522,6 +3522,7 @@ public class StandardContext extends ContainerBase
                 (sm.getString("standardContext.servletMap.pattern", decodedPattern));
 
         // Add this mapping to our registered set
+        // 如果对某个servlet重复配置了urlPattern，那么将被覆盖
         synchronized (servletMappingsLock) {
             String name2 = servletMappings.get(decodedPattern);
             if (name2 != null) {
@@ -3536,6 +3537,7 @@ public class StandardContext extends ContainerBase
         wrapper.addMapping(decodedPattern);
 
         // Update context mapper
+        // 在Mapper中添加映射关系
         mapper.addWrapper(decodedPattern, wrapper, jspWildCard,
                 resourceOnlyServlets.contains(name));
 
@@ -5635,7 +5637,7 @@ public class StandardContext extends ContainerBase
                     ((Lifecycle) resources).start();
 
                 // Notify our interested LifecycleListeners
-                // 这里会发布一个CONFIGURE_START_EVENT事件，ContextConfig会接收到此事件
+                // 这里会发布一个CONFIGURE_START_EVENT事件，虽然是事件，但其实并不是异步，ContextConfig会接收到此事件
                 fireLifecycleEvent(Lifecycle.CONFIGURE_START_EVENT, null);
 
                 // Start our child containers, if not already started

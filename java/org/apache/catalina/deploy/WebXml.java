@@ -1447,8 +1447,10 @@ public class WebXml {
                         servlet.getAsyncSupported().booleanValue());
             }
             wrapper.setOverridable(servlet.isOverridable());
+            // 把wrapper添加到context中去
             context.addChild(wrapper);
         }
+        // 把mapping关系添加到context中去
         for (Entry<String, String> entry : servletMappings.entrySet()) {
             context.addServletMapping(entry.getKey(), entry.getValue());
         }

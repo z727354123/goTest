@@ -385,7 +385,7 @@ public class ContextConfig implements LifecycleListener {
 
         // Process the event that has occurred
         if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
-            // StandardContext在启动时就会触发此事件
+            // StandardContext在启动时就会触发此事件，会解析web.xml文件
             configureStart();
         } else if (event.getType().equals(Lifecycle.BEFORE_START_EVENT)) {
             beforeStart();
@@ -397,6 +397,7 @@ public class ContextConfig implements LifecycleListener {
         } else if (event.getType().equals(Lifecycle.CONFIGURE_STOP_EVENT)) {
             configureStop();
         } else if (event.getType().equals(Lifecycle.AFTER_INIT_EVENT)) {
+            // 创建context.xml文件的解析器contextDigester，并解析context.xml文件，并且创建web.xml文件的解析器webDigester
             init();
         } else if (event.getType().equals(Lifecycle.AFTER_DESTROY_EVENT)) {
             destroy();
@@ -1290,6 +1291,7 @@ public class ContextConfig implements LifecycleListener {
         WebXml webXml = createWebXml();
 
         // Parse context level web.xml
+        // 解析Context级别的web.xml
         InputSource contextWebXml = getContextWebXmlSource();
         parseWebXml(contextWebXml, webXml, false);
 
@@ -1339,9 +1341,9 @@ public class ContextConfig implements LifecycleListener {
                 webXml.configureContext(context);
             }
         } else {
-            webXml.merge(defaults);
-            convertJsps(webXml);
-            webXml.configureContext(context);
+            webXml.merge(defaults); // 默认情况下, defaults就是conf/web.xml文件对应的WebXml对象
+            convertJsps(webXml);    // 将jsp转化为Servlet
+            webXml.configureContext(context);   // 根据webxml配置context，比如把定义的servlet转化为wrapper,然后添加到StandardContext中，还包括很多其他的
         }
 
         // Step 9a. Make the merged web.xml available to other
@@ -1450,7 +1452,7 @@ public class ContextConfig implements LifecycleListener {
         javaClassCache.clear();
     }
 
-    // 这个方法主要将web.xml文件转化为WebXml对象
+    // 获取默认的WebXml对象
     private WebXml getDefaultWebXmlFragment() {
 
         // Host should never be null
@@ -2196,6 +2198,7 @@ public class ContextConfig implements LifecycleListener {
     }
 
 
+    // 处理注解
     protected void processClass(WebXml fragment, JavaClass clazz) {
         AnnotationEntry[] annotationsEntries = clazz.getAnnotationEntries();
         if (annotationsEntries != null) {
@@ -2434,25 +2437,36 @@ public class ContextConfig implements LifecycleListener {
                 internalForm.length() - 1).replace('/', '.');
     }
 
+    /**
+     *
+     * @param className 被@WebServlet注解的类名
+     * @param ae        @WebServlet注解对象
+     * @param fragment
+     */
     protected void processAnnotationWebServlet(String className,
             AnnotationEntry ae, WebXml fragment) {
         String servletName = null;
         // must search for name s. Spec Servlet API 3.0 - 8.2.3.3.n.ii page 81
         List<ElementValuePair> evps = ae.getElementValuePairs();
+        // 遍历注解上配置的name:value对
         for (ElementValuePair evp : evps) {
             String name = evp.getNameString();
+            // @WebServlet中的name为servletName
             if ("name".equals(name)) {
                 servletName = evp.getValue().stringifyValue();
                 break;
             }
         }
+        // 如果没有配置name,那么servletName为类名
         if (servletName == null) {
             // classname is default servletName as annotation has no name!
             servletName = className;
         }
+        // 查看该servletName是否在webxml中存在
         ServletDef servletDef = fragment.getServlets().get(servletName);
 
         boolean isWebXMLservletDef;
+        // 如果没有在webxml中定义，那么就定义一个Servlet
         if (servletDef == null) {
             servletDef = new ServletDef();
             servletDef.setServletName(servletName);
@@ -2463,7 +2477,7 @@ public class ContextConfig implements LifecycleListener {
         }
 
         boolean urlPatternsSet = false;
-        String[] urlPatterns = null;
+        String[] urlPatterns = null;  // 可以配置多个urlPatterns
 
         // List<ElementValuePair> evps = ae.getElementValuePairs();
         for (ElementValuePair evp : evps) {
@@ -2502,9 +2516,11 @@ public class ContextConfig implements LifecycleListener {
                             .setLoadOnStartup(evp.getValue().stringifyValue());
                 }
             } else if ("initParams".equals(name)) {
+                // 初始化参数键值对
                 Map<String, String> initParams = processAnnotationWebInitParams(evp
                         .getValue());
                 if (isWebXMLservletDef) {
+                    // 如果该servlet在webxml中也定义了,将注解上定义的initparams和webxml中定义的initparams合并
                     Map<String, String> webXMLInitParams = servletDef
                             .getParameterMap();
                     for (Map.Entry<String, String> entry : initParams
@@ -2527,6 +2543,7 @@ public class ContextConfig implements LifecycleListener {
             fragment.addServlet(servletDef);
         }
         if (urlPatterns != null) {
+            // 如果webxml中对当前servletname没有配置mapping关系
             if (!fragment.getServletMappings().containsValue(servletName)) {
                 for (String urlPattern : urlPatterns) {
                     fragment.addServletMapping(urlPattern, servletName);

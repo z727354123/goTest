@@ -517,6 +517,10 @@ public class HostConfig
     /**
      * Deploy applications for any directories or WAR files that are found
      * in our "application root" directory.
+     * 部署应用的三种方式
+     * 1. 描述符部署
+     * 2. War包部署
+     * 3. 文件夹部署
      */
     protected void deployApps() {
 
