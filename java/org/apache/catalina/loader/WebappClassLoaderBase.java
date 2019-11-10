@@ -1825,6 +1825,9 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      * @param resolve If <code>true</code> then resolve the class
      *
      * @exception ClassNotFoundException if the class was not found
+     *
+     * 重写了loadClass方法
+     * 默认的 loadClass 方法实现了双亲委派机制的逻辑，即会先让父类加载器加载，当无法加载时，才由自己加载。
      */
     @SuppressWarnings("sync-override")
     @Override
@@ -1845,6 +1848,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             }
 
             // (0) Check our previously loaded local class cache
+            // 先检查该类是否已经被Webapp类加载器加载。
             clazz = findLoadedClass0(name);
             if (clazz != null) {
                 if (log.isDebugEnabled())
@@ -1855,6 +1859,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             }
 
             // (0.1) Check our previously loaded class cache
+            // 该方法直接调用findLoadedClass0本地方法，findLoadedClass0方法会检查JVM缓存中是否加载过此类
             clazz = findLoadedClass(name);
             if (clazz != null) {
                 if (log.isDebugEnabled())
@@ -1866,6 +1871,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
             // (0.2) Try loading the class with the system class loader, to prevent
             //       the webapp from overriding J2SE classes
+            // 尝试通过系统类加载器（AppClassLoader）加载类，防止webapp重写JDK中的类
+            // 假设，webapp想自己去加载一个java.lang.String的类，这是不允许的，必须在这里进行预防。
             try {
                 clazz = j2seClassLoader.loadClass(name);
                 if (clazz != null) {
@@ -1901,6 +1908,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             boolean delegateLoad = delegate || filter(name);
 
             // (1) Delegate to our parent if requested
+            // 是否委派给父类去加载
             if (delegateLoad) {
                 if (log.isDebugEnabled())
                     log.debug("  Delegating to parent classloader1 " + parent);
@@ -1919,6 +1927,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             }
 
             // (2) Search local repositories
+            // 从webapp应用内部进行加载
             if (log.isDebugEnabled())
                 log.debug("  Searching local repositories");
             try {
@@ -1935,6 +1944,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             }
 
             // (3) Delegate to parent unconditionally
+            // 如果webapp应用内部没有加载到类，那么无条件委托给父类进行加载
             if (!delegateLoad) {
                 if (log.isDebugEnabled())
                     log.debug("  Delegating to parent classloader at end: " + parent);

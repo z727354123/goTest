@@ -5551,6 +5551,7 @@ public class StandardContext extends ContainerBase
 //        </Context>
      // 如果没有配，则生成一个WebappLoader
         if (getLoader() == null) {
+         // Webapp类加载器的父类加载器为Host的ParentClassLoader，最终就是Catalina类的类加载器，其实就是CommonClassLoader
             WebappLoader webappLoader = new WebappLoader(getParentClassLoader());
             webappLoader.setDelegate(getDelegate());
             setLoader(webappLoader);

@@ -749,7 +749,7 @@ public class WebappLoader extends LifecycleMBeanBase
         WebappClassLoaderBase classLoader = null;
 
         if (parentClassLoader == null) {
-            // 父加载器为容器得父加载器
+            // 父加载器为容器的父加载器
             parentClassLoader = container.getParentClassLoader();
         }
 
