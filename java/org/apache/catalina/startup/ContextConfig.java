@@ -385,21 +385,25 @@ public class ContextConfig implements LifecycleListener {
 
         // Process the event that has occurred
         if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
-            // StandardContext在启动时就会触发此事件，会解析web.xml文件
+            // StandardContext启动过程中触发，解析web.xml文件，将Servlet、Filter等添加到Context中
             configureStart();
         } else if (event.getType().equals(Lifecycle.BEFORE_START_EVENT)) {
+            // StandardContext启动之前触发
             beforeStart();
         } else if (event.getType().equals(Lifecycle.AFTER_START_EVENT)) {
+            // StandardContext启动之后触发
             // Restore docBase for management tools
             if (originalDocBase != null) {
                 context.setDocBase(originalDocBase);
             }
         } else if (event.getType().equals(Lifecycle.CONFIGURE_STOP_EVENT)) {
+            // StandardContext停止过程中触发，将Servlet、Filter等从Context中移除
             configureStop();
         } else if (event.getType().equals(Lifecycle.AFTER_INIT_EVENT)) {
-            // 创建context.xml文件的解析器contextDigester，并解析context.xml文件，并且创建web.xml文件的解析器webDigester
+            // StandardContext初始化后触发，创建context.xml文件的解析器contextDigester，并解析context.xml文件，并且创建web.xml文件的解析器webDigester
             init();
         } else if (event.getType().equals(Lifecycle.AFTER_DESTROY_EVENT)) {
+            // StandardContext销毁后触发，删除workDir
             destroy();
         }
 
@@ -1310,6 +1314,7 @@ public class ContextConfig implements LifecycleListener {
                 WebXml.orderWebFragments(webXml, fragments, sContext);
 
         // Step 3. Look for ServletContainerInitializer implementations
+        // 处理ServletContainerInitializers
         if (ok) {
             processServletContainerInitializers();
         }

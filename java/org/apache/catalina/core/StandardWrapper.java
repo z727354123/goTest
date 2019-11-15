@@ -227,6 +227,7 @@ public class StandardWrapper extends ContainerBase
 
     /**
      * Stack containing the STM instances.
+     * Servlet池
      */
     protected Stack<Servlet> instancePool = null;
 
@@ -823,6 +824,10 @@ public class StandardWrapper extends ContainerBase
      * @exception ServletException if the servlet init() method threw
      *  an exception
      * @exception ServletException if a loading error occurs
+     *
+     * 分配一个已经初始化好的Servlet实例。
+     * 如果Servlet没有实现SingleThreadModel接口，已经被初始化好的实例可以被立即返回
+     * 如果Servlet实现了SingleThreadModel接口，Wrapper的实现要确保某一实例不会重复分配，除非调用了deallocate方法回收了该实例
      */
     @Override
     public Servlet allocate() throws ServletException {

@@ -130,6 +130,19 @@
         <!--
         <Valve className="org.apache.catalina.authenticator.SingleSignOn" />
         -->
+<!--        <Context path="/hh" docBase="C:\Users\周瑜\IdeaProjects\ServletDemo\target\ServletDemo" >-->
+<!--          <Resource-->
+<!--                  name="jdbc/myDB"-->
+<!--                  auth="Container"-->
+<!--                  type="javax.sql.DataSource"-->
+<!--                  driverClassName="com.mysql.jdbc.Driver"-->
+<!--                  url="jdbc:mysql://192.168.99.100:33306/test"-->
+<!--                  username="root"-->
+<!--                  password="123456"-->
+<!--                  maxActive="5"-->
+<!--                  maxIdle="2"-->
+<!--                  maxWait="10000"/>-->
+<!--        </Context>-->
 
         <!-- Access log processes all example.
              Documentation at: /docs/config/valve.html
@@ -138,7 +151,10 @@
                prefix="localhost_access_log." suffix=".txt"
                pattern="%h %l %u %t &quot;%r&quot; %s %b" />
 
+        <Valve className="com.luban.TestValve"/>
+
       </Host>
+
     </Engine>
   </Service>
 </Server>

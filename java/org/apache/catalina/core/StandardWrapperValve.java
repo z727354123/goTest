@@ -180,6 +180,7 @@ final class StandardWrapperValve
         // Create the filter chain for this request
         ApplicationFilterFactory factory =
             ApplicationFilterFactory.getInstance();
+
         ApplicationFilterChain filterChain =
             factory.createFilterChain(request, wrapper, servlet);
 
