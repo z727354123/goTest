@@ -521,6 +521,8 @@ public class HostConfig
      * 1. 描述符部署
      * 2. War包部署
      * 3. 文件夹部署
+     *
+     * 另外Tomcat中是使用异步多线程的方式部署应用的
      */
     protected void deployApps() {
 
@@ -647,6 +649,11 @@ public class HostConfig
      */
     @SuppressWarnings("null") // context is not null
     protected void deployDescriptor(ContextName cn, File contextXml) {
+        // 描述符部署
+        // 部署一个应用本身比较简单，分为
+        // 1. 注册ContextConfig：
+        // 2. 将context添加到host中
+
 
         DeployedApplication deployedApp =
                 new DeployedApplication(cn.getName(), true);
@@ -679,7 +686,7 @@ public class HostConfig
                 }
             }
 
-            Class<?> clazz = Class.forName(host.getConfigClass());
+            Class<?> clazz = Class.forName(host.getConfigClass());  // ContextConfig
             LifecycleListener listener =
                 (LifecycleListener) clazz.newInstance();
             context.addLifecycleListener(listener);
@@ -695,6 +702,7 @@ public class HostConfig
                     docBase = new File(appBase(), context.getDocBase());
                 }
                 // If external docBase, register .xml as redeploy first
+                // 如果docBase指定的路径不是tomcat的webapp目录下的，也就是tomcat外部
                 if (!docBase.getCanonicalPath().startsWith(
                         appBase().getAbsolutePath() + File.separator)) {
                     isExternal = true;
@@ -1298,7 +1306,7 @@ public class HostConfig
             context.setPath(cn.getPath());
             context.setWebappVersion(cn.getVersion());
             context.setDocBase(cn.getBaseName());
-            host.addChild(context);
+            host.addChild(context); // 这行代码里会启动context
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
             log.error(sm.getString("hostConfig.deployDir.error",
@@ -1306,6 +1314,18 @@ public class HostConfig
         } finally {
             deployedApp = new DeployedApplication(cn.getName(),
                     xml.exists() && deployThisXML && copyThisXml);
+
+            // 以下是去记录以下哪些文件或文件夹的变动需要重新进行部署
+            // "C:\Users\周瑜\IdeaProjects\tomcat-7\webapps\docs.war" -> {Long@2919} 0
+            // "C:\Users\周瑜\IdeaProjects\tomcat-7\webapps\docs" -> {Long@2920} 1573826212067
+            // "C:\Users\周瑜\IdeaProjects\tomcat-7\webapps\docs\META-INF\context.xml" -> {Long@2921} 1571549870811
+            // "C:\Users\周瑜\IdeaProjects\tomcat-7\conf\Catalina\localhost\docs.xml" -> {Long@2919} 0
+
+            // 还有两个全局的context.xml也会添加进来
+            // C:\Users\周瑜\IdeaProjects\tomcat-7\conf\Catalina\localhost\context.xml.default
+            // C:\Users\周瑜\IdeaProjects\tomcat-7\conf\context.xml
+
+            // 以上的这些文件或文件夹都表示一个应用，所以只要发生了变动就要进行重新部署
 
             // Fake re-deploy resource to detect if a WAR is added at a later
             // point
@@ -1465,22 +1485,32 @@ public class HostConfig
                 // modified time has to be more than 1000ms ago to ensure that
                 // modifications that take place in the same second are not
                 // missed. See Bug 57765.
+
+                // 文件中当前上一次修改时间不等于map中记录的上一次修改时间 并且 (host没有开启热部署 或者 文件中当前的上一次修改时间小于1秒前 或者 跳过文件修改检查为true)
+                // 其中需要注意的是，每次进行热部署时只会对一秒之前修改的资源文件进行检查，如果每次都是检查当前是否修改了，那么很有可能还没有修改完就被部署了
+                // 当然，如果skipFileModificationResolutionCheck为true，从而只要资源文件修改了就会进行检查
+                //
                 if (resource.lastModified() != lastModified && (!host.getAutoDeploy() ||
                         resource.lastModified() < currentTimeWithResolutionOffset ||
                         skipFileModificationResolutionCheck)) {
                     if (resource.isDirectory()) {
                         // No action required for modified directory
+                        // 如果是文件目录发生了修改，那么只需要更新map中value为最新的上一次修改时间
                         app.redeployResources.put(resources[i],
                                 Long.valueOf(resource.lastModified()));
                     } else if (app.hasDescriptor &&
                             resource.getName().toLowerCase(
                                     Locale.ENGLISH).endsWith(".war")) {
+                        // 如果是通过描述符部署的war，也就是在context.xml中的docbase指定一个war的方式，如果是这种情况下的war包发生了修改
+
                         // Modified WAR triggers a reload if there is an XML
                         // file present
                         // The only resource that should be deleted is the
                         // expanded WAR (if any)
                         Context context = (Context) host.findChild(app.name);
                         String docBase = context.getDocBase();
+
+                        // 这种情况到底会怎么产生？
                         if (!docBase.toLowerCase(Locale.ENGLISH).endsWith(".war")) {
                             // This is an expanded directory
                             File docBaseFile = new File(docBase);
@@ -1489,6 +1519,7 @@ public class HostConfig
                             }
                             reload(app, docBaseFile, resource.getAbsolutePath());
                         } else {
+                            // 如果就是war包发生了修改，那么进行热加载
                             reload(app, null, null);
                         }
                         // Update times
@@ -1613,6 +1644,7 @@ public class HostConfig
             boolean deleteReloadResources) {
 
         // Delete other redeploy resources
+        // 删除其他的热部署资源
         for (int j = i + 1; j < resources.length; j++) {
             File current = new File(resources[j]);
             // Never delete per host context.xml defaults
@@ -1961,6 +1993,13 @@ public class HostConfig
          * removed, the application will be undeployed. Typically, this will
          * contain resources like the context.xml file, a compressed WAR path.
          * The value is the last modification time.
+         *
+         * 指定的这些资源发生了任何修改都会造成对应的应用重新部署
+         * 如果这些资源被删除了，那么对应的应用就会被undeployed(下线)
+         * 通常，这些资源是context.xml，压缩war的路径
+         *
+         * LinkedHashMap的value为上次修改时间
+         *
          */
         public LinkedHashMap<String, Long> redeployResources =
             new LinkedHashMap<String, Long>();
@@ -1971,6 +2010,11 @@ public class HostConfig
          * such as the web.xml of a webapp, but can be configured to contain
          * additional descriptors.
          * The value is the last modification time.
+         *
+         * 指定的这些资源发生了任何修改都会造成对应的应用重新加载
+         * 通常，这些资源包括web.xml，web.xml是可以被配置的
+         *
+         * value是资源的上一次修改时间
          */
         public HashMap<String, Long> reloadResources =
             new HashMap<String, Long>();
