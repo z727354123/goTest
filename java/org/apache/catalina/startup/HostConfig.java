@@ -702,7 +702,7 @@ public class HostConfig
                     docBase = new File(appBase(), context.getDocBase());
                 }
                 // If external docBase, register .xml as redeploy first
-                // 如果docBase指定的路径不是tomcat的webapp目录下的，也就是tomcat外部
+                // 如果docBase指定的路径不是tomcat的webapp目录，那么就表示指向的tomcat外部
                 if (!docBase.getCanonicalPath().startsWith(
                         appBase().getAbsolutePath() + File.separator)) {
                     isExternal = true;
@@ -1233,7 +1233,7 @@ public class HostConfig
         }
 
         Context context = null;
-        File xml = new File(dir, Constants.ApplicationContextXml);
+        File xml = new File(dir, Constants.ApplicationContextXml); // META-INF/context.xml
         File xmlCopy = new File(configBase(), cn.getBaseName() + ".xml");
 
         DeployedApplication deployedApp;
@@ -1360,7 +1360,12 @@ public class HostConfig
                             Long.valueOf(0));
                 }
             }
+            // 添加资源到reloadResources中，表示如果这些资源发生了变动就要进行reload，重新加载
             addWatchedResources(deployedApp, dir.getAbsolutePath(), context);
+
+            // 添加两个全局的context.xml到redeployResources中来
+            // C:\Users\周瑜\IdeaProjects\tomcat-7\conf\Catalina\localhost\context.xml.default
+            // C:\Users\周瑜\IdeaProjects\tomcat-7\conf\context.xml
             // Add the global redeploy resources (which are never deleted) at
             // the end so they don't interfere with the deletion process
             addGlobalRedeployResources(deployedApp);
@@ -1493,9 +1498,12 @@ public class HostConfig
                 if (resource.lastModified() != lastModified && (!host.getAutoDeploy() ||
                         resource.lastModified() < currentTimeWithResolutionOffset ||
                         skipFileModificationResolutionCheck)) {
+
+                    System.out.println("热部署过程中"+resource.getAbsolutePath()+"发生了修改或添加");
+
                     if (resource.isDirectory()) {
                         // No action required for modified directory
-                        // 如果是文件目录发生了修改，那么只需要更新map中value为最新的上一次修改时间
+                        // 如果是文件目录发生了修改，那么只需要更新map中value为最新的上一次修改时间，不用做其他事情
                         app.redeployResources.put(resources[i],
                                 Long.valueOf(resource.lastModified()));
                     } else if (app.hasDescriptor &&
@@ -1545,6 +1553,8 @@ public class HostConfig
                     }
                 }
             } else {
+                // 如果文件
+
                 // There is a chance the the resource was only missing
                 // temporarily eg renamed during a text editor save
                 try {
@@ -1557,11 +1567,14 @@ public class HostConfig
                     continue;
                 }
                 // Undeploy application
+                System.out.println("热部署过程中"+resource.getAbsolutePath()+"发生了删除");
                 undeploy(app);
                 deleteRedeployResources(app, resources, i, true);
                 return;
             }
         }
+
+        // 监测web.xml是否发生改动
         resources = app.reloadResources.keySet().toArray(new String[0]);
         boolean update = false;
         for (int i = 0; i < resources.length; i++) {
@@ -1580,6 +1593,7 @@ public class HostConfig
                             skipFileModificationResolutionCheck)) ||
                     update) {
                 if (!update) {
+                    System.out.println("热部署流程中发现web.xml文件发生了改变");
                     // Reload application
                     reload(app, null, null);
                     update = true;

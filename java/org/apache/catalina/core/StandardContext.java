@@ -5603,7 +5603,7 @@ public class StandardContext extends ContainerBase
 
 
         // Binding thread
-        // 将当前线程的类加载器设置为WebClassLoader
+        // 将当前线程的类加载器设置为WebClassLoader，记录一下当前线程的classloader
         ClassLoader oldCCL = bindThread();
 
         try {
@@ -5643,7 +5643,7 @@ public class StandardContext extends ContainerBase
 
                 // Start our child containers, if not already started
                 // Context下是Wrapper，这些Wrapper是什么时候添加进Context中的？就是上面的CONFIGURE_START_EVENT事件触发的
-                // 启动Wrapper
+                // 如果Wrapper不可用就启动，默认情况下是已经启动了的。
                 for (Container child : findChildren()) {
                     if (!child.getState().isAvailable()) {
                         child.start();

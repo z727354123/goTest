@@ -434,6 +434,7 @@ public class WebappLoader extends LifecycleMBeanBase
     @Override
     public void backgroundProcess() {
         if (reloadable && modified()) {
+            System.out.println(container.getInfo()+"触发了热加载");
             try {
                 Thread.currentThread().setContextClassLoader
                     (WebappLoader.class.getClassLoader());
@@ -625,15 +626,15 @@ public class WebappLoader extends LifecycleMBeanBase
             }
 
             // Configure our repositories
-            setRepositories();  // 设置类加载器的拥有的class和jar，就是/WEB-INF/classes和/WEB-INF/lib目录下
-            setClassPath(); // 把当前类加载器或者父加载器所能加载的class和jar当做classpath
+            setRepositories();  // 将DirContext下的/WEB-INF/classes和/WEB-INF/lib目录添加到WebappClassLoader的Repository中，以后将从Repository中寻找并加载类
+            setClassPath(); // 设置当前加载器的classpath，应该是只有在jsp中用到
 
             setPermissions();
 
-            ((Lifecycle) classLoader).start();  // 启动WebappClassLoader，调用WebappClassLoaderBase.start()，赋值webInfClassesCodeBase属性
+            ((Lifecycle) classLoader).start();  // 调用WebappClassLoaderBase.start()，赋值webInfClassesCodeBase属性，这个属性不知道哪里会用到，表示web-inf/classes目录
 
             // Binding the Webapp class loader to the directory context
-            // 类加载到DirContext的一个映射关系
+            // 类加载器与DirContext的一个映射关系
             DirContextURLStreamHandler.bind(classLoader,
                     this.container.getResources());
 
@@ -915,6 +916,7 @@ public class WebappLoader extends LifecycleMBeanBase
             String absoluteClassesPath =
                 servletContext.getRealPath(classesPath);
 
+            // 如果是一个绝对路径
             if (absoluteClassesPath != null) {
 
                 classRepository = new File(absoluteClassesPath);
@@ -1081,6 +1083,7 @@ public class WebappLoader extends LifecycleMBeanBase
         // Assemble the class path information from our class loader chain
         ClassLoader loader = getClassLoader();
 
+        // 如果委托给父类，则直接从父类加载器开始组装classpath链，然后把本应用的类加载器中的资源放在最后
         if (delegate && loader != null) {
             // Skip the webapp loader for now as delegation is enabled
             loader = loader.getParent();

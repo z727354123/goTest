@@ -130,7 +130,7 @@
         <!--
         <Valve className="org.apache.catalina.authenticator.SingleSignOn" />
         -->
-<!--        <Context path="/hh" docBase="C:\Users\周瑜\IdeaProjects\ServletDemo\target\ServletDemo" >-->
+<!--        <Context path="/ServletDemo" docBase="C:\Users\周瑜\IdeaProjects\ServletDemo\target\ServletDemoServerXml" >-->
 <!--          <Resource-->
 <!--                  name="jdbc/myDB"-->
 <!--                  auth="Container"-->

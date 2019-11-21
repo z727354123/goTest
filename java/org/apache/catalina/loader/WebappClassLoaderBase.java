@@ -335,6 +335,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      * resources may be requested by binary name (classes) or path (other
      * resources such as property files) and the mapping from binary name to
      * path is unambiguous but the reverse mapping is ambiguous.
+     *
+     * 记录一下某个类在哪里
      */
     protected Map<String, ResourceEntry> resourceEntries =
             new ConcurrentHashMap<String, ResourceEntry>();
@@ -1085,6 +1087,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      *
      * @exception IllegalArgumentException if the specified repository is
      *  invalid or does not exist
+     *
+     *  添加一个资源到仓库中，类加载器能在这些资源中寻找类并进行加载
+     *  repository表示资源的名字，比如一个目录路径、jar包文件路径、zip文件路径
+     *  其实这个方法只有一个地方调用了，传入进来的是repository=/WEB-INF/classes/, file为/WEB-INF/classes/的绝对路径file
      */
     synchronized void addRepository(String repository, File file) {
 
@@ -1100,6 +1106,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         int i;
 
         // Add this repository to our internal list
+        // 将资源路径添加到repositories数组中
         String[] result = new String[repositories.length + 1];
         for (i = 0; i < repositories.length; i++) {
             result[i] = repositories[i];
@@ -1108,6 +1115,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         repositories = result;
 
         // Add the file to the list
+        // 将资源文件或目录添加到files数组中
         File[] result2 = new File[files.length + 1];
         for (i = 0; i < files.length; i++) {
             result2[i] = files[i];
@@ -1139,6 +1147,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             while (jarName.startsWith("/"))
                 jarName = jarName.substring(1);
 
+            // 把当前这个jar的名字添加到jarNames数组中
             String[] result = new String[jarNames.length + 1];
             for (i = 0; i < jarNames.length; i++) {
                 result[i] = jarNames[i];
@@ -1156,6 +1165,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 ((ResourceAttributes) resources.getAttributes(jar))
                 .getLastModified();
 
+            // 把当前这个jar的路径添加到paths数组中
             String[] result = new String[paths.length + 1];
             for (i = 0; i < paths.length; i++) {
                 result[i] = paths[i];
@@ -1163,6 +1173,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             result[paths.length] = jar;
             paths = result;
 
+            // 把当前这个jar的lastModified添加到lastModifiedDates数组中
             long[] result3 = new long[lastModifiedDates.length + 1];
             for (i = 0; i < lastModifiedDates.length; i++) {
                 result3[i] = lastModifiedDates[i];
@@ -1250,6 +1261,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         length = jarNames.length;
 
         // Check if JARs have been added or removed
+        // 检查是否有jar包添加或删除
         if (getJarPath() != null) {
 
             try {
@@ -3314,6 +3326,9 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      */
     protected ResourceEntry findResourceInternal(final String name, final String path,
             final boolean manifestRequired) {
+        if (name.contains("LubanHttpServlet")) {
+            System.out.println(name);
+        }
 
         if (!started) {
             log.info(sm.getString("webappClassLoader.stopped", name));
