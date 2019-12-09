@@ -1610,7 +1610,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         if (thread != null)
             return;
 
-        System.out.println(this.getInfo() + "的backgroundProcessorDelay等于=" + backgroundProcessorDelay);
+//        System.out.println(this.getInfo() + "的backgroundProcessorDelay等于=" + backgroundProcessorDelay);
         // 默认情况下只有Engine的backgroundProcessorDelay大于0，为10，
         // 也就是说，虽然每个容器在启动的时候都会走到当前方法，但是只有Engine能继续往下面去执行
         // 但是其他容器是可以配置backgroundProcessorDelay属性的，只要配置了大于0，那么这个容器也会单独开启一个backgroundProcessor线程
@@ -1677,7 +1677,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                         Container parent = (Container) getMappingObject();
                         ClassLoader cl =
                             Thread.currentThread().getContextClassLoader();
-                        System.out.println("ContainerBackgroundProcessor在运行"+ parent.getName());
+//                        System.out.println("ContainerBackgroundProcessor在运行"+ parent.getName());
                         if (parent.getLoader() != null) {
                             System.out.println(parent.getName() + "有loader");
                             cl = parent.getLoader().getClassLoader();
