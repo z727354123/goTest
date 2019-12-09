@@ -171,7 +171,9 @@ public class Http11Processor extends AbstractHttp11Processor<Socket> {
                 }
             }
             socketWrapper.getSocket().setSoTimeout(firstReadTimeout);
-            if (!inputBuffer.fill()) {
+//            System.out.println("fill");
+            if (!inputBuffer.fill()) {      // 会从inputStream中获取数据
+//                System.out.println("fillAfter");
                 throw new EOFException(sm.getString("iib.eof.error"));
             }
             // Once the first byte has been read, the standard timeout should be

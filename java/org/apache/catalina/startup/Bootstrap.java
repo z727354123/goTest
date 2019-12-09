@@ -78,7 +78,8 @@ public final class Bootstrap {
     private void initClassLoaders() {
         try {
             // CommonClassLoader是一个公共的类加载器
-            commonLoader = createClassLoader("common", null);
+            commonLoader = createClassLoader("common", null); // 虽然这个地方parent是null，实际上是appclassloader
+//            System.out.println("commonLoader的父类加载器===="+commonLoader.getParent());
             if( commonLoader == null ) {
                 // no config file, default to this loader - we might be in a 'single' env.
                 commonLoader=this.getClass().getClassLoader();

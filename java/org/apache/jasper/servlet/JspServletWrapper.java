@@ -411,6 +411,7 @@ public class JspServletWrapper {
             servlet = getServlet();
 
             // If a page is to be precompiled only, return.
+            // 一个页面仅仅只需要编译
             if (precompile) {
                 return;
             }
@@ -447,11 +448,27 @@ public class JspServletWrapper {
              */
             if (unloadAllowed) {  // 是否要卸载jsp-servlet
                 synchronized(this) {
-                    if (unloadByCount) { // 如果配置了限制的数量
-                        if (unloadHandle == null) { // 待卸载的jsp-servlet的处理器
+                    if (unloadByCount) { // 如果配置了限制的数量,则表示ctxt.getRuntimeContext()中只能容纳固定的jsw，那么
+                        if (unloadHandle == null) {
                             unloadHandle = ctxt.getRuntimeContext().push(this);
                         } else if (lastUsageTime < ctxt.getRuntimeContext().getLastJspQueueUpdate()) {
-                            ctxt.getRuntimeContext().makeYoungest(unloadHandle); // 卸载上一个
+                            // lastUsageTime表示当前jsw上次使用时间
+                            // ctxt.getRuntimeContext().getLastJspQueueUpdate()这个时间会由background线程定时更新一次
+                            // 如果lastUsageTime 大于 ctxt.getRuntimeContext().getLastJspQueueUpdate()不需要做什么操作
+
+                            // 第一种情况
+                            // 1. jsw被访问
+                            // 2. background线程执行
+                            // 3. jsw再次被访问
+                            // 4. 符合当前条件，jsw被移动至队首
+
+                            // 第二种情况
+                            // 1. background线程执行
+                            // 2. jsw第一次被访问
+                            // 3. 不符合条件，而此时应该符合unloadHandle == null
+
+                            // 将最近访问的jsw移动至队首
+                            ctxt.getRuntimeContext().makeYoungest(unloadHandle); // 将unloadHandle移到队首
                             lastUsageTime = System.currentTimeMillis();
                         }
                     } else {

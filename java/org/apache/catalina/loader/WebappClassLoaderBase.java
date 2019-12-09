@@ -1242,15 +1242,15 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         for (int i = 0; i < length; i++) {
             try {
                 long lastModified =
-                    ((ResourceAttributes) resources.getAttributes(paths[i]))
-                    .getLastModified();
-                if (lastModified != lastModifiedDates[i]) {
-                    if( log.isDebugEnabled() )
-                        log.debug("  Resource '" + paths[i]
-                                  + "' was modified; Date is now: "
-                                  + new java.util.Date(lastModified) + " Was: "
-                                  + new java.util.Date(lastModifiedDates[i]));
-                    return (true);
+                            ((ResourceAttributes) resources.getAttributes(paths[i]))
+                                    .getLastModified();
+                    if (lastModified != lastModifiedDates[i]) {
+                        if( log.isDebugEnabled() )
+                            log.debug("  Resource '" + paths[i]
+                                    + "' was modified; Date is now: "
+                                    + new java.util.Date(lastModified) + " Was: "
+                                    + new java.util.Date(lastModifiedDates[i]));
+                        return (true);
                 }
             } catch (NamingException e) {
                 log.error("    Resource '" + paths[i] + "' is missing");
@@ -1872,7 +1872,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
             // (0.1) Check our previously loaded class cache
             // 该方法直接调用findLoadedClass0本地方法，findLoadedClass0方法会检查JVM缓存中是否加载过此类
-            clazz = findLoadedClass(name);
+            clazz = findLoadedClass(name);   // jvm..
             if (clazz != null) {
                 if (log.isDebugEnabled())
                     log.debug("  Returning class from cache");
@@ -1886,7 +1886,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             // 尝试通过系统类加载器（AppClassLoader）加载类，防止webapp重写JDK中的类
             // 假设，webapp想自己去加载一个java.lang.String的类，这是不允许的，必须在这里进行预防。
             try {
-                clazz = j2seClassLoader.loadClass(name);
+                clazz = j2seClassLoader.loadClass(name);    // java.lang.*
                 if (clazz != null) {
                     if (resolve)
                         resolveClass(clazz);
@@ -3729,8 +3729,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      *
      * @param name Name of the resource to return
      */
-    protected Class<?> findLoadedClass0(String name) {
-        String path = binaryNameToPath(name, true);
+    protected Class<?> findLoadedClass0(String name) {   //com.luban.Test
+        String path = binaryNameToPath(name, true);   // com/luban/Test
         ResourceEntry entry = resourceEntries.get(path);
         if (entry != null) {
             return entry.loadedClass;

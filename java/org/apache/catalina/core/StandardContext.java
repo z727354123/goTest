@@ -4213,7 +4213,7 @@ public class StandardContext extends ContainerBase
                     getName()));
 
         // Stop accepting requests temporarily.
-        setPaused(true);
+        setPaused(true);//
 
         try {
             stop();

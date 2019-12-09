@@ -218,6 +218,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                         // Accept the next incoming connection from the server
                         // socket
                         socket = serverSocketFactory.acceptSocket(serverSocket);
+//                        System.out.println("JioEndpoint接收到了socket");
                     } catch (IOException ioe) {
                         countDownConnection();
                         // Introduce delay if necessary
@@ -261,6 +262,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
 
     private void closeSocket(Socket socket) {
         try {
+//            System.out.println("JioEndpoint关闭了socket");
             socket.close();
         } catch (IOException e) {
             // Ignore
@@ -298,7 +300,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                     SocketState state = SocketState.OPEN;
 
                     try {
-                        // SSL handshake
+                        // SSL handshake  https
                         serverSocketFactory.handshake(socket.getSocket());
                     } catch (Throwable t) {
                         ExceptionUtils.handleThrowable(t);
@@ -316,11 +318,13 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                             state = handler.process(socket,status);
                         }
                     }
+//                    System.out.println("state="+ state);
                     if (state == SocketState.CLOSED) {
                         // Close socket
                         if (log.isTraceEnabled()) {
                             log.trace("Closing socket:"+socket);
                         }
+//                        System.out.println("JioEndpoint关闭了socket");
                         countDownConnection();
                         try {
                             socket.getSocket().close();

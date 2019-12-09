@@ -17,8 +17,10 @@
 package org.apache.coyote.http11;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.StringReader;
+import java.net.Socket;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
@@ -1036,6 +1038,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
     @Override
     public SocketState process(SocketWrapper<S> socketWrapper)
         throws IOException {
+//        System.out.println("process");
         RequestInfo rp = request.getRequestProcessor();
         rp.setStage(org.apache.coyote.Constants.STAGE_PARSE);
 
@@ -1066,7 +1069,9 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
             // Parsing the request header
             try {
+//                System.out.println("setRequestLineReadTimeoutBefore");
                 setRequestLineReadTimeout();
+//                System.out.println("setRequestLineReadTimeoutAfter");
 
                 if (!getInputBuffer().parseRequestLine(keptAlive)) {
                     if (handleIncompleteRequestLineRead()) {
