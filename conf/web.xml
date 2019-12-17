@@ -611,6 +611,9 @@
 
     <session-config>
         <session-timeout>30</session-timeout>
+        <cookie-config>
+            <name>lubansession</name>
+        </cookie-config>
     </session-config>
 
 

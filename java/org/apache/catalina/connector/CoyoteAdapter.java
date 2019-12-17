@@ -423,6 +423,7 @@ public class CoyoteAdapter implements Adapter {
             response.setRequest(request);
 
             // Set as notes
+            // notes是一个数组，是用来进行线程传递数据的，类似ThreadLocal，数组比ThreadLocal快
             req.setNote(ADAPTER_NOTES, request);
             res.setNote(ADAPTER_NOTES, response);
 
@@ -803,8 +804,10 @@ public class CoyoteAdapter implements Adapter {
             // (if any). Need to do this before we redirect in case we need to
             // include the session id in the redirect
             String sessionID;
+            // 当前Context启用的Session跟踪模式
             if (request.getServletContext().getEffectiveSessionTrackingModes()
                     .contains(SessionTrackingMode.URL)) {
+                // 如果session是根据url来跟踪的，那么则从url中获取cookieName对应的sessionId
 
                 // Get the session ID if there was one
                 sessionID = request.getPathParameter(
@@ -1121,6 +1124,8 @@ public class CoyoteAdapter implements Adapter {
         // from a parent context with a session ID may be present which would
         // overwrite the valid session ID encoded in the URL
         Context context = (Context) request.getMappingData().context;
+
+        // 如果Context不支持Session
         if (context != null && !context.getServletContext()
                 .getEffectiveSessionTrackingModes().contains(
                         SessionTrackingMode.COOKIE)) {
@@ -1128,12 +1133,14 @@ public class CoyoteAdapter implements Adapter {
         }
 
         // Parse session id from cookies
+        // 请求中携带的cookie
         Cookies serverCookies = req.getCookies();
         int count = serverCookies.getCookieCount();
         if (count <= 0) {
             return;
         }
 
+        // 当前Context所指定的sessionCookie的名字，表示cookie中的这个名字对应的就是sessionID
         String sessionCookieName = SessionConfig.getSessionCookieName(context);
 
         for (int i = 0; i < count; i++) {
@@ -1141,6 +1148,7 @@ public class CoyoteAdapter implements Adapter {
             if (scookie.getName().equals(sessionCookieName)) {
                 // Override anything requested in the URL
                 if (!request.isRequestedSessionIdFromCookie()) {
+                    // 如果当前request中还没有设置SessionId，那么就从cookie中获取并设置
                     // Accept only the first session id cookie
                     convertMB(scookie.getValue());
                     request.setRequestedSessionId
@@ -1153,6 +1161,8 @@ public class CoyoteAdapter implements Adapter {
                     }
                 } else {
                     if (!request.isRequestedSessionIdValid()) {
+                        // 如果request中已经有sessionId了，那么就去Manager中寻找是否存在对应的Session对象，如果不存在则表示不合法
+                        // 那么直接将cookie中的值更新到request中
                         // Replace the session id until one is valid
                         convertMB(scookie.getValue());
                         request.setRequestedSessionId

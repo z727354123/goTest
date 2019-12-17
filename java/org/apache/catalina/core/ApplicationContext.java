@@ -125,6 +125,7 @@ public class ApplicationContext implements ServletContext {
         this.sessionCookieConfig = new ApplicationSessionCookieConfig(context);
 
         // Populate session tracking modes
+        // 填充session跟踪模式
         populateSessionTrackingModes();
     }
 

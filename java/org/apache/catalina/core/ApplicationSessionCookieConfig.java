@@ -42,6 +42,7 @@ public class ApplicationSessionCookieConfig implements SessionCookieConfig {
     private String path;
     private StandardContext context;
 
+    // sessionCookie的配置对象
     public ApplicationSessionCookieConfig(StandardContext context) {
         this.context = context;
     }

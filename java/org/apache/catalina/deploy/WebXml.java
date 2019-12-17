@@ -1454,6 +1454,8 @@ public class WebXml {
         for (Entry<String, String> entry : servletMappings.entrySet()) {
             context.addServletMapping(entry.getKey(), entry.getValue());
         }
+
+        // 如果WebXML中配置了session-config
         if (sessionConfig != null) {
             if (sessionConfig.getSessionTimeout() != null) {
                 context.setSessionTimeout(

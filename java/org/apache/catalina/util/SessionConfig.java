@@ -47,7 +47,7 @@ public class SessionConfig {
      * @param context
      */
     public static String getSessionUriParamName(Context context) {
-
+        // 获取cookieName，用户是可以配置cookieName的
         String result = getConfiguredSessionCookieName(context);
 
         if (result == null) {
