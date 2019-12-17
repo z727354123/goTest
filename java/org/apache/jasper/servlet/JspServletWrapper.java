@@ -448,7 +448,10 @@ public class JspServletWrapper {
              */
             if (unloadAllowed) {  // 是否要卸载jsp-servlet
                 synchronized(this) {
-                    if (unloadByCount) { // 如果配置了限制的数量,则表示ctxt.getRuntimeContext()中只能容纳固定的jsw，那么
+                    if (unloadByCount) {
+                        // 如果配置了限制的数量,则表示ctxt.getRuntimeContext()中只能容纳固定的jsw
+                        // 那么如果超过了限制则将队尾jsw移除掉
+                        // 当然，就算没有配置限制的数量，background线程会定时执行，将超过jspIdleTimeout时间的移除掉
                         if (unloadHandle == null) {
                             unloadHandle = ctxt.getRuntimeContext().push(this);
                         } else if (lastUsageTime < ctxt.getRuntimeContext().getLastJspQueueUpdate()) {

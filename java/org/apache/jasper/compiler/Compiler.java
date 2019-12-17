@@ -557,10 +557,10 @@ public abstract class Compiler {
      * Remove generated files
      */
     public void removeGeneratedFiles() {
-        removeGeneratedClassFiles();
+        removeGeneratedClassFiles(); // 删除work目录下的当前jsp对应的class文件
 
         try {
-            File javaFile = new File(ctxt.getServletJavaFileName());
+            File javaFile = new File(ctxt.getServletJavaFileName()); // 删除work目录下的当前jsp对应的java文件
             if (log.isDebugEnabled())
                 log.debug("Deleting " + javaFile);
             if (javaFile.exists()) {

@@ -387,7 +387,7 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
                     }
                     wrapper = new JspServletWrapper(config, options, jspUri,
                                                     rctxt);
-                    // 将wrapper存入JspRuntimeContext的jsps中
+                    // 将jsw存入JspRuntimeContext的jsps中, 一个jsp页面对应一个jsw
                     rctxt.addWrapper(jspUri,wrapper);
                 }
             }
