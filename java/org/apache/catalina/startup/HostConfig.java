@@ -530,10 +530,13 @@ public class HostConfig
         File configBase = configBase();
         String[] filteredAppPaths = filterAppPaths(appBase.list());
         // Deploy XML descriptors from configBase
+        // 描述符部署
         deployDescriptors(configBase, configBase.list());
         // Deploy WARs
+        // war包部署
         deployWARs(appBase, filteredAppPaths);
         // Deploy expanded folders
+        // 文件夹部署
         deployDirectories(appBase, filteredAppPaths);
 
     }
