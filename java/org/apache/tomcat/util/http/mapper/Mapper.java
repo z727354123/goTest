@@ -791,6 +791,7 @@ public final class Mapper {
         uri.setLimit(-1);
 
         // Virtual host mapping
+        // 从当前Engine中包含的虚拟主机中进行筛选
         Host[] hosts = this.hosts;
         Host mappedHost = exactFindIgnoreCase(hosts, host);
         if (mappedHost == null) {
@@ -802,15 +803,16 @@ public final class Mapper {
                 return;
             }
         }
-        mappingData.host = mappedHost.object;
+        mappingData.host = mappedHost.object;       // 找到了对应的host
 
         // Context mapping
         ContextList contextList = mappedHost.contextList;
-        Context[] contexts = contextList.contexts;
+        Context[] contexts = contextList.contexts;  // 找到的host中对应的context
         int nesting = contextList.nesting;
 
-        int pos = find(contexts, uri);
+        int pos = find(contexts, uri); //折半查找法
         if (pos == -1) {
+            // 没有找到直接返回
             return;
         }
 
@@ -827,6 +829,7 @@ public final class Mapper {
                     found = true;
                     break;
                 } else if (uri.startsWithIgnoreCase("/", length)) {
+                    // 这个方法判断在length位置是不是"/",所以如果uri中是ServletDemo123,Context是ServletDemo那么将不会匹配
                     found = true;
                     break;
                 }
@@ -1229,14 +1232,15 @@ public final class Mapper {
     private static final int find(MapElement[] map, CharChunk name,
                                   int start, int end) {
 
-        int a = 0;
-        int b = map.length - 1;
+        int a = 0;     // 开始位置
+        int b = map.length - 1; // 结束位置
 
         // Special cases: -1 and 0
         if (b == -1) {
             return -1;
         }
 
+        // 因为map是一个排好序了的数组，所以先比较name是不是小于map[0].name，如果小于那么肯定在map中不存在name了
         if (compare(name, start, end, map[0].name) < 0 ) {
             return -1;
         }
@@ -1246,21 +1250,21 @@ public final class Mapper {
 
         int i = 0;
         while (true) {
-            i = (b + a) / 2;
+            i = (b + a) / 2; // 折半
             int result = compare(name, start, end, map[i].name);
-            if (result == 1) {
+            if (result == 1) { // 如果那么大于map[i].name，则表示name应该在右侧，将a变大为i
                 a = i;
-            } else if (result == 0) {
+            } else if (result == 0) { // 相等
                 return i;
             } else {
-                b = i;
+                b = i; // 将b缩小为i
             }
-            if ((b - a) == 1) {
+            if ((b - a) == 1) { // 表示缩小到两个元素了，那么取b进行比较
                 int result2 = compare(name, start, end, map[b].name);
-                if (result2 < 0) {
+                if (result2 < 0) { // name小于b,则返回a
                     return a;
                 } else {
-                    return b;
+                    return b;  // 否则返回b
                 }
             }
         }

@@ -444,6 +444,7 @@ public class CoyoteAdapter implements Adapter {
         try {
             // Parse and set Catalina and configuration specific
             // request parameters
+            // 在真正把request和response交给容器处理之前，在进行一些操作
             postParseSuccess = postParseRequest(req, request, res, response);
             if (postParseSuccess) {
                 //check valves if we support async
@@ -691,8 +692,8 @@ public class CoyoteAdapter implements Adapter {
         if (req.scheme().isNull()) {
             // Use connector scheme and secure configuration, (defaults to
             // "http" and false respectively)
-            req.scheme().setString(connector.getScheme());
-            request.setSecure(connector.getSecure());
+            req.scheme().setString(connector.getScheme());  //http
+            request.setSecure(connector.getSecure());    // 是否是https,默认为false
         } else {
             // Use processor specified scheme to determine secure state
             request.setSecure(req.scheme().equals("https"));
@@ -700,12 +701,14 @@ public class CoyoteAdapter implements Adapter {
 
         // At this point the Host header has been processed.
         // Override if the proxyPort/proxyHost are set
+        // 在这个阶段，请求中的hostname和port已经被解析出来了，如果connector设置了proxyname和proxyport，那么就进行覆盖
         String proxyName = connector.getProxyName();
         int proxyPort = connector.getProxyPort();
         if (proxyPort != 0) {
             req.setServerPort(proxyPort);
         } else if (req.getServerPort() == -1) {
             // Not explicitly set. Use default ports based on the scheme
+            // 如果请求中没有端口，比如http://www.baidu.com,那么默认的就为80,如果是https则默认为443
             if (req.scheme().equals("https")) {
                 req.setServerPort(443);
             } else {
@@ -718,7 +721,7 @@ public class CoyoteAdapter implements Adapter {
 
         // Copy the raw URI to the decodedURI
         MessageBytes decodedURI = req.decodedURI();
-        decodedURI.duplicate(req.requestURI());
+        decodedURI.duplicate(req.requestURI());  // 将requestURI设置成编码之后的格式
 
         // Parse the path parameters. This will:
         //   - strip out the path parameters

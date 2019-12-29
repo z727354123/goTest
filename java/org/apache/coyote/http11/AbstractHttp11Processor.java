@@ -1142,7 +1142,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 // Setting up filters, and parse some request headers
                 rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);  // 设置请求状态为预处理状态
                 try {
-                    prepareRequest();   // 预处理
+                    prepareRequest();   // 预处理, 主要从请求中处理处keepAlive属性，以及进行一些验证，以及根据请求分析得到ActiveInputFilter
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
                     if (getLog().isDebugEnabled()) {
@@ -1321,11 +1321,13 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             http11 = true;
             protocolMB.setString(Constants.HTTP_11);
         } else if (protocolMB.equals(Constants.HTTP_10)) {
+            // http1.0不支持keepAlive
             http11 = false;
             keepAlive = false;
             protocolMB.setString(Constants.HTTP_10);
         } else if (protocolMB.equals("")) {
             // HTTP/0.9
+            // http0.9不支持keepAlive
             http09 = true;
             http11 = false;
             keepAlive = false;
@@ -1355,9 +1357,11 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         if (connectionValueMB != null && !connectionValueMB.isNull()) {
             ByteChunk connectionValueBC = connectionValueMB.getByteChunk();
             if (findBytes(connectionValueBC, Constants.CLOSE_BYTES) != -1) {
+                // 如果请求头中connection=close，表示不是长连接
                 keepAlive = false;
             } else if (findBytes(connectionValueBC,
                                  Constants.KEEPALIVE_BYTES) != -1) {
+                // 如果请求头中connection=keep-alive，表示长连接
                 keepAlive = true;
             }
         }
@@ -1376,6 +1380,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         // Check user-agent header
+        // 请求本来是http1.1或keepAlive的，如果请求中所指定的user-agent被限制了，则http11=false, keepAlive=false
         if ((restrictedUserAgents != null) && ((http11) || (keepAlive))) {
             MessageBytes userAgentValueMB = headers.getValue("user-agent");
             // Check in the restricted list, and adjust the http11
@@ -1393,6 +1398,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         // Check host header
         MessageBytes hostValueMB = null;
         try {
+            // 获取唯一的host,请求头中不能有多个key为host
             hostValueMB = headers.getUniqueValue("host");
         } catch (IllegalArgumentException iae) {
             // Multiple Host headers are not permitted
@@ -1404,6 +1410,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
         // Check for an absolute-URI less the query string which has already
         // been removed during the parsing of the request line
+        // URI格式：[协议名]://[用户名]:[密码]@[服务器地址]:[服务器端口号]/[路径]?[查询字符串]#[片段ID]
         ByteChunk uriBC = request.requestURI().getByteChunk();
         byte[] uriB = uriBC.getBytes();
         if (uriBC.startsWithIgnoreCase("http", 0)) {
@@ -1439,6 +1446,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 }
 
                 // Skip any user info
+                // 检验用户信息格式是否正确
                 if (atPos != -1) {
                     // Validate the userinfo
                     for (; pos < atPos; pos++) {
@@ -1460,6 +1468,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                     if (hostValueMB != null) {
                         // Any host in the request line must be consistent with
                         // the Host header
+                        // uri中的主机名是不是和header中的一致，如果不一致，看是否tomcat运行不一致，如果允许则修改header中的为uri中的
                         if (!hostValueMB.getByteChunk().equals(
                                 uriB, uriBCStart + pos, slashPos - pos)) {
                             if (allowHostHeaderMismatch) {
@@ -1506,6 +1515,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         // Input filter setup
+        // 获取支持的InputFilter，后面根据请求中不同的设置来选择要使用的InputFilter
         InputFilter[] inputFilters = getInputBuffer().getFilters();
 
         // Parse transfer-encoding header
@@ -1554,6 +1564,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         // Validate host name and extract port if present
+        // 解析hostname和port
         parseHost(hostValueMB);
 
         if (!contentDelimitation) {
