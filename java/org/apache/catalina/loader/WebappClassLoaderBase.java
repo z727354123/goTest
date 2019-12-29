@@ -1861,7 +1861,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
             // (0) Check our previously loaded local class cache
             // 先检查该类是否已经被Webapp类加载器加载。
-            clazz = findLoadedClass0(name);
+            clazz = findLoadedClass0(name); // map， clasloader.findLoadedClass0 native jvm
             if (clazz != null) {
                 if (log.isDebugEnabled())
                     log.debug("  Returning class from cache");
@@ -1872,7 +1872,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
             // (0.1) Check our previously loaded class cache
             // 该方法直接调用findLoadedClass0本地方法，findLoadedClass0方法会检查JVM缓存中是否加载过此类
-            clazz = findLoadedClass(name);   // jvm..
+            clazz = findLoadedClass(name);   // jvm 内存
             if (clazz != null) {
                 if (log.isDebugEnabled())
                     log.debug("  Returning class from cache");
@@ -1886,7 +1886,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             // 尝试通过系统类加载器（AppClassLoader）加载类，防止webapp重写JDK中的类
             // 假设，webapp想自己去加载一个java.lang.String的类，这是不允许的，必须在这里进行预防。
             try {
-                clazz = j2seClassLoader.loadClass(name);    // java.lang.*
+                clazz = j2seClassLoader.loadClass(name);    // java.lang.Object
                 if (clazz != null) {
                     if (resolve)
                         resolveClass(clazz);
@@ -1943,7 +1943,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             if (log.isDebugEnabled())
                 log.debug("  Searching local repositories");
             try {
-                clazz = findClass(name);
+                clazz = findClass(name); //
                 if (clazz != null) {
                     if (log.isDebugEnabled())
                         log.debug("  Loading class from local repository");
@@ -3177,7 +3177,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             throw new ClassNotFoundException(name);
 
         ResourceEntry entry = null;
-        String path = binaryNameToPath(name, true);
+        String path = binaryNameToPath(name, true); // com/luban/Test
 
         if (securityManager != null) {
             PrivilegedAction<ResourceEntry> dp =
@@ -3323,6 +3323,9 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      * Find specified resource in local repositories.
      *
      * @return the loaded resource, or null if the resource isn't found
+     *
+     * com.luban.Test
+     * com/luban/Test
      */
     protected ResourceEntry findResourceInternal(final String name, final String path,
             final boolean manifestRequired) {

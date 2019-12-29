@@ -195,6 +195,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
             while (running) {
 
                 // Loop if endpoint is paused
+                // 如果Endpoint仍然在运行，但是被暂停了，那么就无限循环，从而不能接受请求
                 while (paused && running) {
                     state = AcceptorState.PAUSED;
                     try {
@@ -211,6 +212,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
 
                 try {
                     //if we have reached max connections, wait
+                    //达到了最大连接数限制则等待
                     countUpOrAwaitConnection();
 
                     Socket socket = null;
@@ -230,8 +232,12 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                     errorDelay = 0;
 
                     // Configure the socket
+                    // 如果Endpoint正在运行并且没有被暂停，那么就处理该socket
                     if (running && !paused && setSocketOptions(socket)) {
                         // Hand this socket off to an appropriate processor
+                        // socket被正常的交给了线程池，processSocket就会返回true
+                        // 如果没有被交给线程池或者中途Endpoint被停止了，则返回false
+                        // 返回false则关闭该socket
                         if (!processSocket(socket)) {
                             countDownConnection();
                             // Close socket right away

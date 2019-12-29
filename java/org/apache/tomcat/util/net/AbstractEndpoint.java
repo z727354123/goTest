@@ -111,12 +111,14 @@ public abstract class AbstractEndpoint<S> {
 
     /**
      * Running state of the endpoint.
+     * Endpoint正在运行
      */
     protected volatile boolean running = false;
 
 
     /**
      * Will be set to true whenever the endpoint is paused.
+     * Endpoint被暂停了
      */
     protected volatile boolean paused = false;
 
@@ -796,6 +798,7 @@ public abstract class AbstractEndpoint<S> {
      * Pause the endpoint, which will stop it accepting new connections.
      */
     public void pause() {
+        // Endpoint正在运行并且没有被暂停
         if (running && !paused) {
             paused = true;
             unlockAccept();

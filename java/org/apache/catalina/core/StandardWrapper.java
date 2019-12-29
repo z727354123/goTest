@@ -96,7 +96,7 @@ public class StandardWrapper extends ContainerBase
 
         super();
         swValve=new StandardWrapperValve();
-        pipeline.setBasic(swValve);
+        pipeline.setBasic(swValve);  //
         // 广播
         broadcaster = new NotificationBroadcasterSupport();
 

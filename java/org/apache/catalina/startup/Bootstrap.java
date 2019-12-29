@@ -209,6 +209,8 @@ public final class Bootstrap {
     {
 
         // Set Catalina path
+        // catalina.home表示安装目录
+        // catalina.base表示工作目录
         setCatalinaHome();
         setCatalinaBase();
 

@@ -1296,6 +1296,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     protected synchronized void stopInternal() throws LifecycleException {
 
         // Stop our thread
+        // 停止background线程
         threadStop();
 
         setState(LifecycleState.STOPPING);
