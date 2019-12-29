@@ -94,6 +94,7 @@ public final class ContextName {
             tmp2 = baseName;
         }
 
+        // 应用名字为ROOT，那么path为""
         if (ROOT_NAME.equals(tmp2)) {
             path = "";
         } else {

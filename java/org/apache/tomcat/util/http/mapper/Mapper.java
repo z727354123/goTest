@@ -120,7 +120,7 @@ public final class Mapper {
         List<Host> newAliases = new ArrayList<Host>(aliases.length);
         for (String alias : aliases) {
             Host newAlias = new Host(alias, newHost);
-            if (addHostAliasImpl(newAlias)) {
+            if (addHostAliasImpl(newAlias))  {
                 newAliases.add(newAlias);
             }
         }
@@ -812,7 +812,6 @@ public final class Mapper {
 
         int pos = find(contexts, uri); //折半查找法
         if (pos == -1) {
-            // 没有找到直接返回
             return;
         }
 
@@ -845,6 +844,7 @@ public final class Mapper {
         uri.setEnd(uriEnd);
 
         if (!found) {
+            // 就算没有找到，那么也将当前这个请求交给context[0]来进行处理,就是ROOT应用
             if (contexts[0].name.equals("")) {
                 context = contexts[0];
             } else {
@@ -855,25 +855,25 @@ public final class Mapper {
             return;
         }
 
-        mappingData.contextPath.setString(context.name);
+        mappingData.contextPath.setString(context.name); // 设置最终映射到的contextPath
 
         ContextVersion contextVersion = null;
         ContextVersion[] contextVersions = context.versions;
         final int versionCount = contextVersions.length;
-        if (versionCount > 1) {
+        if (versionCount > 1) { // 如果context有多个版本
             Object[] contextObjects = new Object[contextVersions.length];
             for (int i = 0; i < contextObjects.length; i++) {
                 contextObjects[i] = contextVersions[i].object;
             }
-            mappingData.contexts = contextObjects;
+            mappingData.contexts = contextObjects; // 匹配的所有版本
             if (version != null) {
-                contextVersion = exactFind(contextVersions, version);
+                contextVersion = exactFind(contextVersions, version); // 找出对应版本
             }
         }
         if (contextVersion == null) {
             // Return the latest version
             // The versions array is known to contain at least one element
-            contextVersion = contextVersions[versionCount - 1];
+            contextVersion = contextVersions[versionCount - 1]; // 如果没找到对应版本，则返回最新版本
         }
 
         mappingData.context = contextVersion.object;
@@ -881,6 +881,7 @@ public final class Mapper {
 
         // Wrapper mapping
         if (!contextVersion.isPaused()) {
+            // 根据uri寻找wrapper
             internalMapWrapper(contextVersion, uri, mappingData);
         }
 
@@ -906,11 +907,11 @@ public final class Mapper {
         int servletPath = pathOffset + length;
         path.setOffset(servletPath);
 
-        // Rule 1 -- Exact Match
+        // Rule 1 -- Exact Match 精准匹配
         Wrapper[] exactWrappers = contextVersion.exactWrappers;
         internalMapExactWrapper(exactWrappers, path, mappingData);
 
-        // Rule 2 -- Prefix Match
+        // Rule 2 -- Prefix Match 前缀匹配
         boolean checkJspWelcomeFiles = false;
         Wrapper[] wildcardWrappers = contextVersion.wildcardWrappers;
         if (mappingData.wrapper == null) {
