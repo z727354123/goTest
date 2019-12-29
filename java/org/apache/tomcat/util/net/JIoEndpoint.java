@@ -302,6 +302,8 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
         public void run() {
             boolean launch = false;
             synchronized (socket) {
+                // 开始处理socket
+                // Socket默认状态为OPEN
                 try {
                     SocketState state = SocketState.OPEN;
 
@@ -321,16 +323,18 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                         if (status == null) {
                             state = handler.process(socket, SocketStatus.OPEN_READ);
                         } else {
+                            // status表示应该读数据还是应该写数据
+                            // state表示处理完socket后socket的状态
                             state = handler.process(socket,status);
                         }
                     }
-//                    System.out.println("state="+ state);
+                    // 如果Socket的状态是被关闭，那么就减掉连接数并关闭socket
+                    // 那么Socket的状态是在什么时候被关闭的？
                     if (state == SocketState.CLOSED) {
                         // Close socket
                         if (log.isTraceEnabled()) {
                             log.trace("Closing socket:"+socket);
                         }
-//                        System.out.println("JioEndpoint关闭了socket");
                         countDownConnection();
                         try {
                             socket.getSocket().close();

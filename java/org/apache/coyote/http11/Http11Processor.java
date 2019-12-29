@@ -129,9 +129,11 @@ public class Http11Processor extends AbstractHttp11Processor<Socket> {
         int maxThreads, threadsBusy;
         if ((maxThreads = endpoint.getMaxThreadsWithExecutor()) > 0
                 && (threadsBusy = endpoint.getCurrentThreadsBusy()) > 0) {
+            // threadRatio = （线程池中活跃的线程数/线程池最大的线程数）*100
             threadRatio = (threadsBusy * 100) / maxThreads;
         }
         // Disable keep-alive if we are running low on threads
+        // 如果活跃的线程数占线程池最大线程数的比例大于75%，则关闭KeepAlive
         if (threadRatio > getDisableKeepAlivePercentage()) {
             return true;
         }
@@ -157,9 +159,11 @@ public class Http11Processor extends AbstractHttp11Processor<Socket> {
             if (keepAliveTimeout == -1) {
                 firstReadTimeout = 0;
             } else {
+                // 当前这个请求的排队时间
                 long queueTime =
                     System.currentTimeMillis() - socketWrapper.getLastAccess();
 
+                // 排队时间大于keepAliveTimeout
                 if (queueTime >= keepAliveTimeout) {
                     // Queued for longer than timeout but there might be
                     // data so use shortest possible timeout
@@ -167,17 +171,18 @@ public class Http11Processor extends AbstractHttp11Processor<Socket> {
                 } else {
                     // Cast is safe since queueTime must be less than
                     // keepAliveTimeout which is an int
+                    // 第一次读的时间
                     firstReadTimeout = keepAliveTimeout - (int) queueTime;
                 }
             }
+            // 设置socket的超时时间，然后开始读数据
             socketWrapper.getSocket().setSoTimeout(firstReadTimeout);
-//            System.out.println("fill");
-            if (!inputBuffer.fill()) {      // 会从inputStream中获取数据
-//                System.out.println("fillAfter");
+            if (!inputBuffer.fill()) {      // 会从inputStream中获取数据,会阻塞
                 throw new EOFException(sm.getString("iib.eof.error"));
             }
             // Once the first byte has been read, the standard timeout should be
             // used so restore it here.
+            // 当第一次读取数据完成后，设置socket的超时时间为原本的超时时间
             if (endpoint.getSoTimeout()> 0) {
                 setSocketTimeout(endpoint.getSoTimeout());
             } else {

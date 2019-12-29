@@ -1040,7 +1040,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         throws IOException {
 //        System.out.println("process");
         RequestInfo rp = request.getRequestProcessor();
-        rp.setStage(org.apache.coyote.Constants.STAGE_PARSE);
+        rp.setStage(org.apache.coyote.Constants.STAGE_PARSE);   // 设置请求状态为解析状态
 
         // Setting up the I/O
         setSocketWrapper(socketWrapper);
@@ -1063,17 +1063,21 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             socketWrapper.setKeepAliveLeft(0);
         }
 
+        // keepAlive默认为true,它的值会从请求中读取
         while (!getErrorState().isError() && keepAlive && !comet && !isAsync() &&
                 upgradeInbound == null &&
                 httpUpgradeHandler == null && !endpoint.isPaused()) {
+            // keepAlive如果为true,接下来需要从socket中不停的获取http请求
 
             // Parsing the request header
             try {
-//                System.out.println("setRequestLineReadTimeoutBefore");
+                // 接下来需要从Socket中解析请求行，需要先设置一个读取请求行的超时时间
+                // 现在Socket已经建立好了，那么需要在这个时间内读到请求行的数据
                 setRequestLineReadTimeout();
-//                System.out.println("setRequestLineReadTimeoutAfter");
 
+                // 解析请求行
                 if (!getInputBuffer().parseRequestLine(keptAlive)) {
+                    // 如果解析请求行失败，那么进行相应的处理
                     if (handleIncompleteRequestLineRead()) {
                         break;
                     }
@@ -1081,6 +1085,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
                 if (endpoint.isPaused()) {
                     // 503 - Service unavailable
+                    // 如果Endpoint被暂停了，则返回503
                     response.setStatus(503);
                     setErrorState(ErrorState.CLOSE_CLEAN, null);
                 } else {
@@ -1089,6 +1094,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                     request.getMimeHeaders().setLimit(endpoint.getMaxHeaderCount());
                     request.getCookies().setLimit(getMaxCookieCount());
                     // Currently only NIO will ever return false here
+                    // 解析请求头
                     if (!getInputBuffer().parseHeaders()) {
                         // We've read part of the request, don't recycle it
                         // instead associate it with the socket
@@ -1096,6 +1102,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                         readComplete = false;
                         break;
                     }
+                    // 如果没有关闭上传超时时间，那就重新设置socket的超时时间
                     if (!disableUploadTimeout) {
                         setSocketTimeout(connectionUploadTimeout);
                     }
@@ -1133,9 +1140,9 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
             if (!getErrorState().isError()) {
                 // Setting up filters, and parse some request headers
-                rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);
+                rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);  // 设置请求状态为预处理状态
                 try {
-                    prepareRequest();
+                    prepareRequest();   // 预处理
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
                     if (getLog().isDebugEnabled()) {
@@ -1150,17 +1157,19 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             }
 
             if (maxKeepAliveRequests == 1) {
+                // 如果最大的活跃http请求数量仅仅只为1的话，那么设置keepAlive为false，则不会继续从socket中获取Http请求了
                 keepAlive = false;
             } else if (maxKeepAliveRequests > 0 &&
                     socketWrapper.decrementKeepAlive() <= 0) {
+                // 如果已经达到了keepAlive的最大限制，也设置为false，则不会继续从socket中获取Http请求了
                 keepAlive = false;
             }
 
             // Process the request in the adapter
             if (!getErrorState().isError()) {
                 try {
-                    rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-                    adapter.service(request, response);
+                    rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE); // 设置请求的状态为服务状态，表示正在处理请求
+                    adapter.service(request, response); // 交给容器处理请求
                     // Handle when the response was committed before a serious
                     // error occurred.  Throwing a ServletException should both
                     // set the status to 500 and set the errorException.
@@ -1198,7 +1207,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             }
 
             // Finish the handling of the request
-            rp.setStage(org.apache.coyote.Constants.STAGE_ENDINPUT);
+            rp.setStage(org.apache.coyote.Constants.STAGE_ENDINPUT);  // 设置请求的状态为处理请求结束，接下来要把response写到socket中去了
 
             if (!isAsync() && !comet) {
                 if (getErrorState().isError()) {
@@ -1215,7 +1224,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 endRequest();
             }
 
-            rp.setStage(org.apache.coyote.Constants.STAGE_ENDOUTPUT);
+            rp.setStage(org.apache.coyote.Constants.STAGE_ENDOUTPUT); // 请求状态为输出结束
 
             // If there was an error, make sure the request is counted as
             // and error, and update the statistics counter
@@ -1226,6 +1235,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
             if (!isAsync() && !comet || getErrorState().isError()) {
                 if (getErrorState().isIoAllowed()) {
+                    // 准备处理下一个请求
                     getInputBuffer().nextRequest();
                     getOutputBuffer().nextRequest();
                 }
@@ -1241,13 +1251,16 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
             rp.setStage(org.apache.coyote.Constants.STAGE_KEEPALIVE);
 
+            // 如果处理完当前这个Http请求之后，发现socket里没有下一个请求了,那么就退出当前循环
             if (breakKeepAliveLoop(socketWrapper)) {
                 break;
             }
         }
+        // 至此，循环结束
 
         rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
 
+        // 主要流程就是将socket的状态设置为CLOSED
         if (getErrorState().isError() || endpoint.isPaused()) {
             return SocketState.CLOSED;
         } else if (isAsync() || comet) {

@@ -605,12 +605,13 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 // longer a processor associated with this socket.
                 return SocketState.CLOSED;
             }
-
+            // 设置为非异步，就是同步
             wrapper.setAsync(false);
             ContainerThreadMarker.markAsContainerThread();
 
             try {
                 if (processor == null) {
+                    // 从被回收的processor中获取processor
                     processor = recycledProcessors.poll();
                 }
                 if (processor == null) {
