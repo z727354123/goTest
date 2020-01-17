@@ -143,6 +143,7 @@ public class StandardSession implements HttpSession, Session, Serializable {
 
     /**
      * The collection of user data attributes associated with this Session.
+     * 当前会话所存储的键值对
      */
     protected ConcurrentMap<String, Object> attributes = new ConcurrentHashMap<String, Object>();
 
@@ -628,6 +629,7 @@ public class StandardSession implements HttpSession, Session, Serializable {
             return false;
         }
 
+        // 正在进行过期处理
         if (this.expiring) {
             return true;
         }
@@ -636,6 +638,7 @@ public class StandardSession implements HttpSession, Session, Serializable {
             return true;
         }
 
+        // 设置的过期时间
         if (maxInactiveInterval > 0) {
             long timeNow = System.currentTimeMillis();
             int timeIdle;
@@ -749,6 +752,7 @@ public class StandardSession implements HttpSession, Session, Serializable {
         if (!isValid)
             return;
 
+        // 并发控制
         synchronized (this) {
             // Check again, now we are inside the sync so this code only runs once
             // Double check locking - isValid needs to be volatile
@@ -784,6 +788,7 @@ public class StandardSession implements HttpSession, Session, Serializable {
                 }
             }
             try {
+                // 触发Session过期事件
                 Object listeners[] = context.getApplicationLifecycleListeners();
                 if (notify && (listeners != null)) {
                     HttpSessionEvent event =
@@ -830,6 +835,7 @@ public class StandardSession implements HttpSession, Session, Serializable {
             }
 
             // Remove this session from our manager's active sessions
+            // 利用Manager删除当前session
             manager.remove(this, true);
 
             // Notify interested session event listeners
@@ -850,10 +856,13 @@ public class StandardSession implements HttpSession, Session, Serializable {
             }
 
             // We have completed expire of this session
+            // 过期了就不合法了
             setValid(false);
+            // 过期处理完成
             expiring = false;
 
             // Unbind any objects associated with this session
+            // 拿到该session所有的key
             String keys[] = keys();
             if (oldTccl != null) {
                 if (Globals.IS_SECURITY_ENABLED) {
@@ -866,6 +875,7 @@ public class StandardSession implements HttpSession, Session, Serializable {
                 }
             }
             try {
+                // 遍历key，按key从该Session内部的ConcurrentHashMap中进行移除
                 for (int i = 0; i < keys.length; i++) {
                     removeAttributeInternal(keys[i], notify);
                 }
@@ -1457,6 +1467,8 @@ public class StandardSession implements HttpSession, Session, Serializable {
         HttpSessionBindingEvent event = null;
 
         // Call the valueBound() method if necessary
+        // 如果设置的value实现了HttpSessionBindingListener接口，那么如果value发生了变化，那么将触发valueBound方法
+        // 注册bound是在更新value之前
         if (notify && value instanceof HttpSessionBindingListener) {
             // Don't call any notification if replacing with the same value
             Object oldValue = attributes.get(name);
@@ -1472,9 +1484,11 @@ public class StandardSession implements HttpSession, Session, Serializable {
         }
 
         // Replace or add this attribute
+        // 更新或者添加name，value,如果是更新，那么put方法将返回前一版本的value
         Object unbound = attributes.put(name, value);
 
         // Call the valueUnbound() method if necessary
+        // 如果值发生了修改并且unbound实现了HttpSessionBindingListener接口，那么将触发valueUnbound，新增并不会触发valueUnbound
         if (notify && (unbound != null) && (unbound != value) &&
             (unbound instanceof HttpSessionBindingListener)) {
             try {
@@ -1501,6 +1515,8 @@ public class StandardSession implements HttpSession, Session, Serializable {
                 (HttpSessionAttributeListener) listeners[i];
             try {
                 if (unbound != null) {
+                    // 触发session属性被替换事件
+
                     context.fireContainerEvent("beforeSessionAttributeReplaced",
                             listener);
                     if (event == null) {

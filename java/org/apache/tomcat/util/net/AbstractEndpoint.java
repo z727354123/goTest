@@ -565,9 +565,11 @@ public abstract class AbstractEndpoint<S> {
 
 
     public void createExecutor() {
+        // 是否使用的是内部默认的线程池
         internalExecutor = true;
         TaskQueue taskqueue = new TaskQueue();
         TaskThreadFactory tf = new TaskThreadFactory(getName() + "-exec-", daemon, getThreadPriority());
+        // 默认的线程数量为10
         executor = new ThreadPoolExecutor(getMinSpareThreads(), getMaxThreads(), 60, TimeUnit.SECONDS,taskqueue, tf);
         taskqueue.setParent( (ThreadPoolExecutor) executor);
     }

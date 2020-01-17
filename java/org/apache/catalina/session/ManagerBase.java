@@ -164,6 +164,7 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
     protected final Deque<SessionTiming> sessionCreationTiming =
         new LinkedList<SessionTiming>();
 
+    // Deque, 双端队列，具有队列和栈的特性，可以从两端弹出
     protected final Deque<SessionTiming> sessionExpirationTiming =
         new LinkedList<SessionTiming>();
 
@@ -641,7 +642,9 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
      */
     @Override
     public void backgroundProcess() {
+        // count从0开始，每6次处理一下过期session
         count = (count + 1) % processExpiresFrequency;
+        // count为0时才会处理过期的Session
         if (count == 0)
             processExpires();
     }
@@ -658,7 +661,9 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
         if(log.isDebugEnabled())
             log.debug("Start expire sessions " + getName() + " at " + timeNow + " sessioncount " + sessions.length);
         for (int i = 0; i < sessions.length; i++) {
+            // isValid放在中会进行过期的销毁处理，消费成功则session不合法
             if (sessions[i]!=null && !sessions[i].isValid()) {
+                // 过期session个数计数
                 expireHere++;
             }
         }
@@ -820,17 +825,22 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
         // the manager because it is being persisted - update the expired stats
         if (update) {
             long timeNow = System.currentTimeMillis();
+            // session存活时间，当前是remove方法，不要考虑自动过期的，可能是手到remove
             int timeAlive =
                 (int) (timeNow - session.getCreationTimeInternal())/1000;
+            // 记录一下所有Session中最大的存活时间
             updateSessionMaxAliveTime(timeAlive);
+            // 过期Session数量+1
             expiredSessions.incrementAndGet();
             SessionTiming timing = new SessionTiming(timeNow, timeAlive);
             synchronized (sessionExpirationTiming) {
+                // 添加到尾部，并移除头结点？
                 sessionExpirationTiming.add(timing);
                 sessionExpirationTiming.poll();
             }
         }
 
+        // 根据sessionId进行移除，这里的移除只是将某一个Session对象从ConcurrentHashMap中删除掉，该Session对象仍然存在
         if (session.getIdInternal() != null) {
             sessions.remove(session.getIdInternal());
         }

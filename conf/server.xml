@@ -122,6 +122,14 @@
                resourceName="UserDatabase"/>
       </Realm>
 
+<!--      <Host name="shouji.tmall.com" appBase="shouji">-->
+<!--        <Context/>-->
+<!--      </Host>-->
+
+<!--      <Host name="fuzhuang.tmall.com" appBase="fuzhuang">-->
+<!--        <Context/>-->
+<!--      </Host>-->
+
       <Host name="localhost"  appBase="webapps"
             unpackWARs="true" autoDeploy="true">
 
@@ -131,8 +139,10 @@
         <Valve className="org.apache.catalina.authenticator.SingleSignOn" />
         -->
 
-        <Context path="/ServletDemoHello##1" docBase="D:\IdeaProjects\ServletDemo\target\classes" />
-        <Context path="/ServletDemoHello##2" docBase="D:\IdeaProjects\ServletDemo\target\classes" />
+        <Context path="/ServletHello" docBase="D:\IdeaProjects\ServletDemo\target\ServletDemo"/>
+
+<!--        <Context path="/ServletDemoHello##1" docBase="D:\IdeaProjects\ServletDemo\target\classes" />-->
+<!--        <Context path="/ServletDemoHello##2" docBase="D:\IdeaProjects\ServletDemo\target\classes" />-->
 
 <!--        <Context path="/ServletDemo" docBase="C:\Users\周瑜\IdeaProjects\ServletDemo\target\ServletDemoServerXml" >-->
 <!--          <Resource-->
@@ -155,7 +165,7 @@
                prefix="localhost_access_log." suffix=".txt"
                pattern="%h %l %u %t &quot;%r&quot; %s %b" />
 
-        <Valve className="com.luban.TestValve"/>
+<!--        <Valve className="com.luban.TestValve"/>-->
 
       </Host>
 

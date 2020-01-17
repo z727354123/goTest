@@ -218,7 +218,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                     Socket socket = null;
                     try {
                         // Accept the next incoming connection from the server
-                        // socket
+                        // bio socket
                         socket = serverSocketFactory.acceptSocket(serverSocket);
 //                        System.out.println("JioEndpoint接收到了socket");
                     } catch (IOException ioe) {
@@ -308,7 +308,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                     SocketState state = SocketState.OPEN;
 
                     try {
-                        // SSL handshake  https
+                        // SSL handshake
                         serverSocketFactory.handshake(socket.getSocket());
                     } catch (Throwable t) {
                         ExceptionUtils.handleThrowable(t);
@@ -438,6 +438,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
             paused = false;
 
             // Create worker collection
+            // 如果配置文件里没有配置线程池，那么将创建一个默认的
             if (getExecutor() == null) {
                 createExecutor();
             }

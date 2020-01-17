@@ -306,6 +306,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
         ClassLoader j = String.class.getClassLoader(); // java.lang.String是由BootstrapClassLoader加载的，所以一般都会返回null
         if (j == null) {
+            // 拿到的就是AppClassLoader,然后获取到ExtClassLoader
+            // 这里的目的也就是为了拿到ExtClassLoader
             j = getSystemClassLoader();
             while (j.getParent() != null) {
                 j = j.getParent();
@@ -1413,6 +1415,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         try {
             if (log.isTraceEnabled())
                 log.trace("      findClassInternal(" + name + ")");
+            // 从外部的仓库进行find
             if (hasExternalRepositories && searchExternalFirst) {
                 try {
                     clazz = super.findClass(name);
@@ -1428,6 +1431,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                     throw e;
                 }
             }
+            // 找不到再自己find
             if ((clazz == null)) {
                 try {
                     clazz = findClassInternal(name);
@@ -1917,7 +1921,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 }
             }
 
-            boolean delegateLoad = delegate || filter(name);
+            boolean delegateLoad = delegate || filter(name); // 委托--true
 
             // (1) Delegate to our parent if requested
             // 是否委派给父类去加载
@@ -1943,7 +1947,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             if (log.isDebugEnabled())
                 log.debug("  Searching local repositories");
             try {
-                clazz = findClass(name); //
+                clazz = findClass(name);  // classes,lib
                 if (clazz != null) {
                     if (log.isDebugEnabled())
                         log.debug("  Loading class from local repository");

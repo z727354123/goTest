@@ -659,10 +659,12 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
         // Process the connection
         try {
             //disable blocking, APR style, we are gonna be polling it
+            // 从该channel上读取数据不阻塞
             socket.configureBlocking(false);
             Socket sock = socket.socket();
             socketProperties.setProperties(sock);
 
+            // 每接收到一个请求就封装一个对应的NioChannel, 后续就使用这个NioChannel来处理数据
             NioChannel channel = nioChannels.poll();
             if ( channel == null ) {
                 // SSL setup
@@ -678,7 +680,6 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     NioBufferHandler bufhandler = new NioBufferHandler(socketProperties.getAppReadBufSize(),
                                                                        socketProperties.getAppWriteBufSize(),
                                                                        socketProperties.getDirectBuffer());
-
                     channel = new NioChannel(socket, bufhandler);
                 }
             } else {
@@ -690,6 +691,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     channel.reset();
                 }
             }
+            // channel和某一个poller绑定，poller是一个线程，也就是一个线程处理一个channel
             getPoller0().register(channel);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -758,6 +760,9 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             SocketProcessor sc = processorCache.poll();
             if ( sc == null ) sc = new SocketProcessor(socket,status);
             else sc.reset(socket,status);
+
+            // 如果有线程池，就把该请求教给线程池处理
+            // 如果没有线程池，则直接处理该请求
             if ( dispatch && getExecutor()!=null ) getExecutor().execute(sc);
             else sc.run();
         } catch (RejectedExecutionException rx) {
@@ -825,6 +830,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                         // Accept the next incoming connection from the server
                         // socket
                         socket = serverSock.accept();
+                        System.out.println("接收到请求了才能到这里...");
                     } catch (IOException ioe) {
                         //we didn't get a socket
                         countDownConnection();
@@ -1247,6 +1253,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                         keyCount > 0 ? selector.selectedKeys().iterator() : null;
                     // Walk through the collection of ready keys and dispatch
                     // any active event.
+                    // 循环处理当前channel上就绪的事件
                     while (iterator != null && iterator.hasNext()) {
                         SelectionKey sk = iterator.next();
                         KeyAttachment attachment = (KeyAttachment)sk.attachment();
@@ -1292,6 +1299,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     attachment.access();//make sure we don't time out valid sockets
                     sk.attach(attachment);//cant remember why this is here
                     NioChannel channel = attachment.getChannel();
+                    // 读就绪或写就绪
                     if (sk.isReadable() || sk.isWritable() ) {
                         if ( attachment.getSendfileData() != null ) {
                             processSendfile(sk,attachment, false);
@@ -1301,11 +1309,13 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                                 boolean closeSocket = false;
                                 // Read goes before write
                                 if (sk.isReadable()) {
+                                    // 读数据
                                     if (!processSocket(channel, SocketStatus.OPEN_READ, true)) {
                                         closeSocket = true;
                                     }
                                 }
                                 if (!closeSocket && sk.isWritable()) {
+                                    // 写数据
                                     if (!processSocket(channel, SocketStatus.OPEN_WRITE, true)) {
                                         closeSocket = true;
                                     }

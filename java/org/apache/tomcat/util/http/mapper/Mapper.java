@@ -317,6 +317,7 @@ public final class Mapper {
         }
         int slashCount = slashCount(path);
         synchronized (mappedHost) {
+            // 整个每个Context的不同版本生成不同的ContextVersion对象，其实就是不同的应用，应为就算Context的Path相同，version不相同，那么还是表示不同的应用
             ContextVersion newContextVersion = new ContextVersion(version, context);
             newContextVersion.path = path;
             newContextVersion.slashCount = slashCount;
@@ -326,6 +327,7 @@ public final class Mapper {
             newContextVersion.mapperDirectoryRedirectEnabled = mapperDirectoryRedirectEnabled;
 
             if (wrappers != null) {
+                // 针对每个应用将下层包括的Wrapper映射关系进行分类，并且添加到contextVersion中不同的Wrapperlist中去
                 addWrappers(newContextVersion, wrappers);
             }
 
@@ -336,6 +338,7 @@ public final class Mapper {
                 ContextList newContextList = contextList.addContext(
                         mappedContext, slashCount);
                 if (newContextList != null) {
+                    // 如果ContextList发生了改变，回头更新Host中的contextList
                     updateContextList(mappedHost, newContextList);
                 }
             } else {
@@ -498,15 +501,13 @@ public final class Mapper {
      * @param resourceOnly true if this wrapper always expects a physical
      *                     resource to be present (such as a JSP)
      *
-     *  将urlPattern和StandardWrapper封装成Mapper中的Wrapper，然后保存在Mapper中的ContextVersion中
      */
     protected void addWrapper(ContextVersion context, String path,
             Object wrapper, boolean jspWildCard, boolean resourceOnly) {
 
         synchronized (context) {
             if (path.endsWith("/*")) {  // 比如/test/*
-                // Wildcard wrapper
-                // 通配符Wrapper，
+                // Wildcard wrapper 通配符Wrapper
                 String name = path.substring(0, path.length() - 2);
                 // 这里的两个Wrapper都表示Servlet包装器，不同的是，一个是只用来记录映射关系，一个是真正的StandardWrapper
                 Wrapper newWrapper = new Wrapper(name, wrapper, jspWildCard,
@@ -525,7 +526,7 @@ public final class Mapper {
                     }
                 }
             } else if (path.startsWith("*.")) { // 比如*.jsp
-                // Extension wrapper
+                // Extension wrapper  扩展匹配
                 String name = path.substring(2);
                 Wrapper newWrapper = new Wrapper(name, wrapper, jspWildCard,
                         resourceOnly);
@@ -541,11 +542,12 @@ public final class Mapper {
                         resourceOnly);
                 context.defaultWrapper = newWrapper;
             } else {
-                // Exact wrapper
+                // Exact wrapper   精确匹配
                 final String name;
                 if (path.length() == 0) {
                     // Special case for the Context Root mapping which is
                     // treated as an exact match
+                    // 我们可以在web.xml中配置一个mapping关系是，url-pattern设置为空，那么就表示可以通过应用跟路径来访问
                     name = "/";
                 } else {
                     name = path;
@@ -1552,12 +1554,15 @@ public final class Mapper {
      */
     private static final boolean insertMap
         (MapElement[] oldMap, MapElement[] newMap, MapElement newElement) {
-        int pos = find(oldMap, newElement.name);
+        int pos = find(oldMap, newElement.name);    // 先在oldMap中找是否存在newElement
         if ((pos != -1) && (newElement.name.equals(oldMap[pos].name))) {
+            // 如果存在则不插入了
             return false;
         }
+        // 从oldMap的第0个位置开始，复制pos + 1个元素到newMap中，newMap中从第0个位置开始
         System.arraycopy(oldMap, 0, newMap, 0, pos + 1);
-        newMap[pos + 1] = newElement;
+        newMap[pos + 1] = newElement; // 修改newMap中的pos+1位置的元素为新元素
+        // 从oldMap的第pos+1个位置开始，复制oldMap剩下的元素到newMap中
         System.arraycopy
             (oldMap, pos + 1, newMap, pos + 2, oldMap.length - pos - 1);
         return true;
@@ -1683,6 +1688,8 @@ public final class Mapper {
 
         public ContextList addContext(Context mappedContext, int slashCount) {
             Context[] newContexts = new Context[contexts.length + 1];
+            // 根据name来进行比较，如果mappedContext已经在contexts中存在，那么则不会进行插入，返回空
+            // 如果不存在，则将mappedContext插入到newContexts中，并返回一个新的ContextList对象
             if (insertMap(contexts, newContexts, mappedContext)) {
                 return new ContextList(newContexts, Math.max(nesting,
                         slashCount));
@@ -1722,10 +1729,10 @@ public final class Mapper {
         public int slashCount;
         public String[] welcomeResources = new String[0];
         public javax.naming.Context resources = null;
-        public Wrapper defaultWrapper = null;
-        public Wrapper[] exactWrappers = new Wrapper[0];
-        public Wrapper[] wildcardWrappers = new Wrapper[0];
-        public Wrapper[] extensionWrappers = new Wrapper[0];
+        public Wrapper defaultWrapper = null;               // urlPattern等于("/")，如果一个请求没有匹配其他映射关系，那么就会走这个
+        public Wrapper[] exactWrappers = new Wrapper[0];    // 精确匹配，urlPattern不符合其他情况
+        public Wrapper[] wildcardWrappers = new Wrapper[0];  // urlPattern是以("/*")结尾的
+        public Wrapper[] extensionWrappers = new Wrapper[0]; // urlPattern是以("*.")开始的
         public int nesting = 0;
         public boolean mapperContextRootRedirectEnabled = false;
         public boolean mapperDirectoryRedirectEnabled = false;

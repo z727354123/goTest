@@ -57,6 +57,8 @@ import org.apache.tomcat.util.res.StringManager;
 public class RequestFacade implements HttpServletRequest {
 
 
+
+
     // ----------------------------------------------------------- DoPrivileged
 
     private final class GetAttributePrivilegedAction

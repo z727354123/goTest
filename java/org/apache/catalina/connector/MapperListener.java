@@ -300,7 +300,7 @@ public class MapperListener extends LifecycleMBeanBase
     private void registerHost(Host host) {
 
         String[] aliases = host.findAliases();
-        mapper.addHost(host.getName(), aliases, host);  //
+        mapper.addHost(host.getName(), aliases, host);  //将host加入到mapper.hosts中
 
         for (Container container : host.findChildren()) {
             if (container.getState().isAvailable()) {
@@ -371,8 +371,9 @@ public class MapperListener extends LifecycleMBeanBase
 
         javax.naming.Context resources = context.getResources();
         String[] welcomeFiles = context.findWelcomeFiles();
-        List<WrapperMappingInfo> wrappers = new ArrayList<WrapperMappingInfo>();
+        List<WrapperMappingInfo> wrappers = new ArrayList<WrapperMappingInfo>(); // 该List里面存储的就是Servlet的URL映射关系
 
+        // 循环Wrapper节点，将mapping关系解析到wrappers中
         for (Container container : context.findChildren()) {
             prepareWrapperMappingInfo(context, (Wrapper) container, wrappers);
 
