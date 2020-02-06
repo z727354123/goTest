@@ -139,7 +139,7 @@
         <Valve className="org.apache.catalina.authenticator.SingleSignOn" />
         -->
 
-        <Context path="/ServletHello" docBase="D:\IdeaProjects\ServletDemo\target\ServletDemo"/>
+<!--        <Context path="/ServletHello" docBase="D:\IdeaProjects\ServletDemo\target\ServletDemo"/>-->
 
 <!--        <Context path="/ServletDemoHello##1" docBase="D:\IdeaProjects\ServletDemo\target\classes" />-->
 <!--        <Context path="/ServletDemoHello##2" docBase="D:\IdeaProjects\ServletDemo\target\classes" />-->
