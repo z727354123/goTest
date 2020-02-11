@@ -228,6 +228,7 @@ public abstract class AbstractEndpoint<S> {
 
     /**
      * External Executor based thread pool.
+     * // 如果没有给Connector配置executor，那么将使用默认的线程池， 创建逻辑在JioEndpoint的startInternal方法中
      */
     private Executor executor = null;
     public void setExecutor(Executor executor) {

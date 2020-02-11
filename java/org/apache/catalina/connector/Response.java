@@ -608,6 +608,7 @@ public class Response implements HttpServletResponse {
 
         usingOutputStream = true;
         if (outputStream == null) {
+            // outputBuffer就是输出缓冲区
             outputStream = new CoyoteOutputStream(outputBuffer);
         }
         return outputStream;

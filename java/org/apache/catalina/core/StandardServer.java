@@ -418,6 +418,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     public void await() {
+        System.out.println("StandardServer await");
         // Negative values - don't wait on port - tomcat is embedded or we just don't like ports
         if( port == -2 ) {
             // undocumented yet - for embedding apps that are around, alive.

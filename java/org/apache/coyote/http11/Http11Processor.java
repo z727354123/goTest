@@ -155,16 +155,18 @@ public class Http11Processor extends AbstractHttp11Processor<Socket> {
          * This is a little hacky but better than exposing the socket
          * and the timeout info to the InputBuffer
          */
+        // 最近一次访问的时间
         if (inputBuffer.lastValid == 0 && socketWrapper.getLastAccess() > -1) {
             int firstReadTimeout;
+            // 如果长连接没有超时时间，那么从socket中读数据也没有超时时间
             if (keepAliveTimeout == -1) {
                 firstReadTimeout = 0;
             } else {
-                // 当前这个请求的排队时间
+                // 一个socket在被处理之前会调用一下access方法，所以queueTime表示的是socket创建好了到真正被处理这段过程的排队时间
                 long queueTime =
                     System.currentTimeMillis() - socketWrapper.getLastAccess();
 
-                // 排队时间大于keepAliveTimeout
+                // 如果排队时间大于keepAliveTimeout，表示该socket已经超时了不需要被处理了，设置一个最小的超时时间，当从这个socket上读取数据时会立刻超时
                 if (queueTime >= keepAliveTimeout) {
                     // Queued for longer than timeout but there might be
                     // data so use shortest possible timeout
@@ -172,13 +174,14 @@ public class Http11Processor extends AbstractHttp11Processor<Socket> {
                 } else {
                     // Cast is safe since queueTime must be less than
                     // keepAliveTimeout which is an int
-                    // 第一次读的时间
+                    // 如果排队时间还没有超过keepAliveTimeout，那么第一次从socket中读取数据的超时时间就是所剩下的时间了
                     firstReadTimeout = keepAliveTimeout - (int) queueTime;
                 }
             }
-            // 设置socket的超时时间，然后开始读数据
+            // 设置socket的超时时间，然后开始读数据，该时间就是每次读取数据的超时时间
             socketWrapper.getSocket().setSoTimeout(firstReadTimeout);
-            if (!inputBuffer.fill()) {      // 会从inputStream中获取数据,会阻塞
+            if (!inputBuffer.fill()) {      // 会从inputStream中获取数据,会阻塞，如果在firstReadTimeout的时间内没有读到数据则抛Eof异常 , 数据会被读到buf中
+                // eof是End Of File的意思
                 throw new EOFException(sm.getString("iib.eof.error"));
             }
             // Once the first byte has been read, the standard timeout should be
@@ -189,6 +192,11 @@ public class Http11Processor extends AbstractHttp11Processor<Socket> {
             } else {
                 setSocketTimeout(0);
             }
+
+            // 这里的场景有点像工作，我现在要做一个任务，规定是5天内要完成，但是其中由于客观原因有1天不能工作，所以那一天不算在5天之内，而客观原因解决之后，以后每次做任务就仍然按5天来限制
+            // 任务的就是read
+            // 5天就是timeout
+            // 客观原因就是tomcat的调度
         }
     }
 

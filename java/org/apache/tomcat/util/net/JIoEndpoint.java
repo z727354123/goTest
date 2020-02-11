@@ -219,8 +219,8 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                     try {
                         // Accept the next incoming connection from the server
                         // bio socket
+                        // 此处是阻塞的，那么running属性就算已经被改成false，那么怎么进入到下一次循环呢？
                         socket = serverSocketFactory.acceptSocket(serverSocket);
-//                        System.out.println("JioEndpoint接收到了socket");
                     } catch (IOException ioe) {
                         countDownConnection();
                         // Introduce delay if necessary
@@ -319,7 +319,9 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                         state = SocketState.CLOSED;
                     }
 
+                    // 当前socket没有关闭则处理socket
                     if ((state != SocketState.CLOSED)) {
+                        // SocketState是Tomcat定义的一个状态,这个状态需要处理一下socket才能确定，因为跟客户端，跟具体的请求信息有关系
                         if (status == null) {
                             state = handler.process(socket, SocketStatus.OPEN_READ);
                         } else {

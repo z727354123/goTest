@@ -490,6 +490,7 @@ public class CoyoteAdapter implements Adapter {
             } else if (!comet) {
                 try {
                     request.finishRequest();
+                    // 会在这里把outputBuffer中的数据发送回socket,包括ResponseHeader和ResponseBody
                     response.finishResponse();
                 } finally {
                     if (postParseSuccess) {

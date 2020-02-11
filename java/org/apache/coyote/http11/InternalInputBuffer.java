@@ -58,6 +58,7 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
         this.request = request;
         headers = request.getMimeHeaders();
 
+        // 请求头的缓冲区域大小，一个请求的请求头数据不能超过这个区域
         buf = new byte[headerBufferSize];
 
         this.rejectIllegalHeaderName = rejectIllegalHeaderName;
@@ -526,14 +527,17 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
 
         if (parsingHeader) {
 
+            // 如果还在解析请求头，lastValid表示当前解析数据的下标位置，如果该位置等于buf的长度了，表示请求头的数据超过buf了。
             if (lastValid == buf.length) {
                 throw new IllegalArgumentException
                     (sm.getString("iib.requestheadertoolarge.error"));
             }
 
+            // 从inputStream中读取数据，len表示要读取的数据长度，pos表示把从inputStream读到的数据放在buf的pos位置
+            // nRead表示真实读取到的数据
             nRead = inputStream.read(buf, pos, buf.length - lastValid);
             if (nRead > 0) {
-                lastValid = pos + nRead;
+                lastValid = pos + nRead; // 移动lastValid
             }
 
         } else {

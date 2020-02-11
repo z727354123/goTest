@@ -1038,14 +1038,13 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
     @Override
     public SocketState process(SocketWrapper<S> socketWrapper)
         throws IOException {
-//        System.out.println("process");
         RequestInfo rp = request.getRequestProcessor();
         rp.setStage(org.apache.coyote.Constants.STAGE_PARSE);   // 设置请求状态为解析状态
 
         // Setting up the I/O
         setSocketWrapper(socketWrapper);
-        getInputBuffer().init(socketWrapper, endpoint);
-        getOutputBuffer().init(socketWrapper, endpoint);
+        getInputBuffer().init(socketWrapper, endpoint);     // 将socket的InputStream与InternalInputBuffer进行绑定
+        getOutputBuffer().init(socketWrapper, endpoint);    // 将socket的OutputStream与InternalOutputBuffer进行绑定
 
         // Flags
         keepAlive = true;
@@ -1059,6 +1058,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             keptAlive = socketWrapper.isKeptAlive();
         }
 
+        // 如果当前活跃的线程数占线程池最大线程数的比例大于75%，那么则关闭KeepAlive，不再支持长连接
         if (disableKeepAlive()) {
             socketWrapper.setKeepAliveLeft(0);
         }
@@ -1071,8 +1071,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
             // Parsing the request header
             try {
-                // 接下来需要从Socket中解析请求行，需要先设置一个读取请求行的超时时间
-                // 现在Socket已经建立好了，那么需要在这个时间内读到请求行的数据
+                // 第一次从socket中读取数据，并设置socket的读取数据的超时时间
                 setRequestLineReadTimeout();
 
                 // 解析请求行
@@ -1091,6 +1090,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 } else {
                     keptAlive = true;
                     // Set this every time in case limit has been changed via JMX
+                    // 每次处理一个请求就重新获取一下请求头和cookies的最大限制
                     request.getMimeHeaders().setLimit(endpoint.getMaxHeaderCount());
                     request.getCookies().setLimit(getMaxCookieCount());
                     // Currently only NIO will ever return false here
@@ -1102,7 +1102,6 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                         readComplete = false;
                         break;
                     }
-                    // 如果没有关闭上传超时时间，那就重新设置socket的超时时间
                     if (!disableUploadTimeout) {
                         setSocketTimeout(connectionUploadTimeout);
                     }
@@ -1157,7 +1156,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             }
 
             if (maxKeepAliveRequests == 1) {
-                // 如果最大的活跃http请求数量仅仅只为1的话，那么设置keepAlive为false，则不会继续从socket中获取Http请求了
+                // 如果最大的活跃http请求数量仅仅只能为1的话，那么设置keepAlive为false，则不会继续从socket中获取Http请求了
                 keepAlive = false;
             } else if (maxKeepAliveRequests > 0 &&
                     socketWrapper.decrementKeepAlive() <= 0) {
@@ -1207,7 +1206,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             }
 
             // Finish the handling of the request
-            rp.setStage(org.apache.coyote.Constants.STAGE_ENDINPUT);  // 设置请求的状态为处理请求结束，接下来要把response写到socket中去了
+            rp.setStage(org.apache.coyote.Constants.STAGE_ENDINPUT);  // 设置请求的状态为处理请求结束
 
             if (!isAsync() && !comet) {
                 if (getErrorState().isError()) {
