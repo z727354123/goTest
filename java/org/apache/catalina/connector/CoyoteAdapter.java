@@ -413,8 +413,8 @@ public class CoyoteAdapter implements Adapter {
 
         if (request == null) {
             // Create objects
-            request = connector.createRequest();
-            request.setCoyoteRequest(req);
+            request = connector.createRequest(); // 创建原始请求的包装类，我们叫规范请求
+            request.setCoyoteRequest(req); // 设置对应关系，这两个请求中间又出现了另外一个缓冲区InputBuffer，这个buffer是用来缓存字节所所对应的字符的。
             response = connector.createResponse();
             response.setCoyoteResponse(res);
 

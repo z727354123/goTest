@@ -221,6 +221,9 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                         // bio socket
                         // 此处是阻塞的，那么running属性就算已经被改成false，那么怎么进入到下一次循环呢？
                         socket = serverSocketFactory.acceptSocket(serverSocket);
+
+                        System.out.println("接收到了socket"+socket.getInetAddress());
+
                     } catch (IOException ioe) {
                         countDownConnection();
                         // Introduce delay if necessary

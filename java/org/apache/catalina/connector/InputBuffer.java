@@ -294,6 +294,7 @@ public class InputBuffer extends Reader
     }
 
 
+    //
     public int readByte()
         throws IOException {
 

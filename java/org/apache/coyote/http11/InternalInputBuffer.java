@@ -98,8 +98,10 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
 
         byte chr = 0;
         do {
+            // 把buf里面的字符一个个取出来进行判断，遇到非回车换行符则会退出
 
             // Read new bytes if needed
+            // 如果一直读到的回车换行符则再次调用fill,从inputStream里面读取数据填充到buf中
             if (pos >= lastValid) {
                 if (!fill())
                     throw new EOFException(sm.getString("iib.eof.error"));

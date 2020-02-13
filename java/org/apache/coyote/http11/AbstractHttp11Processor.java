@@ -1745,6 +1745,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         // Connection: close header.
         keepAlive = keepAlive && !statusDropsConnection(statusCode);
         if (!keepAlive) {
+            // socket连接不再活跃了，客户端处理完结果后应该关闭socket
             // Avoid adding the close header twice
             if (!connectionClosePresent) {
                 headers.addValue(Constants.CONNECTION).setString(
