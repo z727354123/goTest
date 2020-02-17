@@ -68,6 +68,9 @@ public class Http11Processor extends AbstractHttp11Processor<Socket> {
         response.setOutputBuffer(outputBuffer);
 
         // 初始化过滤器，这里不是Servlet规范中的Filter，而是Tomcat中的Filter
+        // 包括InputFilter和OutputFilter
+        // InputFilter是用来处理请求体的
+        // OutputFilter是用来处理响应体的
         initializeFilters(maxTrailerSize, allowedTrailerHeaders, maxExtensionSize, maxSwallowSize);
     }
 

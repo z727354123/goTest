@@ -224,10 +224,12 @@ public class InternalNioInputBuffer extends AbstractInputBuffer<NioChannel> {
 
                 // Read new bytes if needed
                 if (pos >= lastValid) {
+                    // Nio默认这个值为false
                     if (useAvailableDataOnly) {
                         return false;
                     }
                     // Do a simple read with a short timeout
+                    // 把channel中的数据读到buf中，如果没有读到则会返回false
                     if (!fill(true, false)) {
                         return false;
                     }
@@ -444,6 +446,7 @@ public class InternalNioInputBuffer extends AbstractInputBuffer<NioChannel> {
                 if ( selector != null ) pool.put(selector);
             }
         } else {
+            // 非阻塞读，没有读到不会阻塞，立即返回0，如果在处理这次NIo事件中没有读到数据，那么此事件其实就是处理结束了，等待下一次事件
             nRead = socket.read(socket.getBufHandler().getReadBuffer());
         }
         if (nRead > 0) {

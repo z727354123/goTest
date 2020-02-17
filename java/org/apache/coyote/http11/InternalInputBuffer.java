@@ -58,7 +58,7 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
         this.request = request;
         headers = request.getMimeHeaders();
 
-        // 请求头的缓冲区域大小，一个请求的请求头数据不能超过这个区域
+        // 请求头的缓冲区域大小，一个请求的请求头数据不能超过这个区域，默认为8192，也就是8*1024个字节=8kb
         buf = new byte[headerBufferSize];
 
         this.rejectIllegalHeaderName = rejectIllegalHeaderName;
@@ -316,11 +316,12 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
 
             chr = buf[pos];
 
-            if (chr == Constants.CR) {
+            if (chr == Constants.CR) { // 回车
                 // Skip
-            } else if (chr == Constants.LF) {
+            } else if (chr == Constants.LF) { // 换行
                 pos++;
                 return false;
+                // 在解析某一行时遇到一个回车换行了，则表示请求头的数据结束了
             } else {
                 break;
             }
@@ -543,7 +544,7 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
             }
 
         } else {
-
+            // buf.length - end表示还能存放多少请求体数据，如果小于4500，那么就新生成一个byte数组
             if (buf.length - end < 4500) {
                 // In this case, the request header was really large, so we allocate a
                 // brand new one; the old one will get GCed when subsequent requests
@@ -583,6 +584,7 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
         public int doRead(ByteChunk chunk, Request req )
             throws IOException {
 
+            // 如果buf中的数据都处理完了，则继续从底层获取数据
             if (pos >= lastValid) {
                 if (!fill())
                     return -1;
@@ -590,7 +592,10 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
 
             int length = lastValid - pos;
             chunk.setBytes(buf, pos, length);
+            // 因为这里是读取请求体，在解析请求行，请求头时，pos是每解析一个字符就移动一下，
+            // 而这里不一样，这里只是负责把请求体的数据读出来即可，对于tomcat来说并不用这部分数据，所以直接把pos移动到lastValid位置
             pos = lastValid;
+
 
             return (length);
         }

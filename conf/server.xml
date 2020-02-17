@@ -124,10 +124,12 @@
 
 <!--      <Host name="shouji.tmall.com" appBase="shouji">-->
 <!--        <Context/>-->
+<!--        -->
 <!--      </Host>-->
 
 <!--      <Host name="fuzhuang.tmall.com" appBase="fuzhuang">-->
-<!--        <Context/>-->
+
+<!--        <Context path="/HelloLuban" docBase="/Users/renyong/IdeaProjects/HelloServlet/target/HelloServlet"/>-->
 <!--      </Host>-->
 
       <Host name="localhost"  appBase="webapps"
@@ -139,7 +141,7 @@
         <Valve className="org.apache.catalina.authenticator.SingleSignOn" />
         -->
 
-<!--        <Context path="/ServletHello" docBase="D:\IdeaProjects\ServletDemo\target\ServletDemo"/>-->
+<!--        <Context path="/HelloLuban" docBase="/Users/renyong/IdeaProjects/HelloServlet/target/HelloServlet"/>-->
 
 <!--        <Context path="/ServletDemoHello##1" docBase="D:\IdeaProjects\ServletDemo\target\classes" />-->
 <!--        <Context path="/ServletDemoHello##2" docBase="D:\IdeaProjects\ServletDemo\target\classes" />-->

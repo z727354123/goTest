@@ -139,6 +139,7 @@ public class CoyoteInputStream
 
     @Override
     public int read(final byte[] b) throws IOException {
+        // 读取数据到b中
 
         if (SecurityUtil.isPackageProtectionEnabled()){
             try{

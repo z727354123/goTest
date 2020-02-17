@@ -220,9 +220,8 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                         // Accept the next incoming connection from the server
                         // bio socket
                         // 此处是阻塞的，那么running属性就算已经被改成false，那么怎么进入到下一次循环呢？
-                        socket = serverSocketFactory.acceptSocket(serverSocket);
-
-                        System.out.println("接收到了socket"+socket.getInetAddress());
+                        socket = serverSocketFactory.acceptSocket(serverSocket);//
+                        System.out.println("接收到了一个socket连接");
 
                     } catch (IOException ioe) {
                         countDownConnection();
@@ -399,6 +398,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
         // Initialize maxConnections
         if (getMaxConnections() == 0) {
             // User hasn't set a value - use the default
+            // 本来maxConnections默认值是10000的，但是因为是bio，所以需要取线程池最大线程数，默认为200
             setMaxConnections(getMaxThreadsWithExecutor());
         }
 
@@ -417,6 +417,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                     serverSocket = serverSocketFactory.createSocket(getPort(),
                             getBacklog());
                 } else {
+                    // serverSocket会不停的接收客户端连接，getBacklog()
                     serverSocket = serverSocketFactory.createSocket(getPort(),
                             getBacklog(), getAddress());
                 }

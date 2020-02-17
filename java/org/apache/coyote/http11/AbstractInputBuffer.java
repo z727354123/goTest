@@ -132,6 +132,9 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
         newFilterLibrary[filterLibrary.length] = filter;
         filterLibrary = newFilterLibrary;
 
+        // filterLibrary数组表示可用的inputfilter
+
+        // activeFilters表示针对每一个特定请求要使用的inputfilter
         activeFilters = new InputFilter[filterLibrary.length];
 
     }
@@ -155,6 +158,7 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
         if (lastActiveFilter == -1) {
             filter.setBuffer(inputStreamInputBuffer);
         } else {
+            // 判断是否重复
             for (int i = 0; i <= lastActiveFilter; i++) {
                 if (activeFilters[i] == filter)
                     return;
@@ -230,10 +234,13 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
         request.recycle();
 
         // Copy leftover bytes to the beginning of the buffer
+        //
         if (lastValid - pos > 0 && pos > 0) {
+            // 把buf中从pos位置开始的数据，复制到buf中的第0个位置，长度就为多读的数据
             System.arraycopy(buf, pos, buf, 0, lastValid - pos);
         }
         // Always reset pos to zero
+        // 把lastValid和pos重置为正确的位置
         lastValid = lastValid - pos;
         pos = 0;
 
@@ -257,8 +264,9 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
     public void endRequest() throws IOException {
 
         if (swallowInput && (lastActiveFilter != -1)) {
+            // 多度的数据
             int extraBytes = (int) activeFilters[lastActiveFilter].end();
-            pos = pos - extraBytes;
+            pos = pos - extraBytes; // 把pos向前移动
         }
     }
 
@@ -286,6 +294,7 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
     @Override
     public int doRead(ByteChunk chunk, Request req)
         throws IOException {
+        // 读请求体的数据，过滤器模式
 
         if (lastActiveFilter == -1)
             return inputStreamInputBuffer.doRead(chunk, req);

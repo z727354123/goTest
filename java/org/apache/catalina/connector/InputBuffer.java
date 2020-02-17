@@ -157,7 +157,8 @@ public class InputBuffer extends Reader
         this.size = size;
         bb = new ByteChunk(size);
         bb.setLimit(size);
-        bb.setByteInputChannel(this);
+        bb.setByteInputChannel(this); // InputChannel表示输入数据的渠道，如果ByteChunk内没有数据的话就冲这个渠道读取数据
+
         cb = new CharChunk(size);
         cb.setLimit(size);
         cb.setOptimizedWrite(false);
@@ -287,6 +288,7 @@ public class InputBuffer extends Reader
             state = BYTE_STATE;
         }
 
+        // 读取数据到bb
         int result = coyoteRequest.doRead(bb);
 
         return result;

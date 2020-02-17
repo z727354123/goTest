@@ -129,12 +129,18 @@ public class IdentityInputFilter implements InputFilter {
     @Override
     public int doRead(ByteChunk chunk, Request req)
         throws IOException {
+        // 当servlet中读取请求体时，会进入到这个方法，该方法返回
 
         int result = -1;
 
+        // contentLength表示请求体的长度，当读取请求体时，只会返回这么长的数据
         if (contentLength >= 0) {
+            // 可能会多次读取请求体，所以记录一下请求体还剩下多少
             if (remaining > 0) {
+                // 这里的buffer是InputSteamInputBuffer，可能会从操作系统的RecvBuf中读取数据，nRead表示读到了多少了数据
                 int nRead = buffer.doRead(chunk, req);
+
+                // 如果读到的数据超过了剩余部分，那么将chunk的标记缩小，缩小为剩余部分的最后一个位置，多余数据不属于请求体了
                 if (nRead > remaining) {
                     // The chunk is longer than the number of bytes remaining
                     // in the body; changing the chunk length to the number
@@ -143,12 +149,15 @@ public class IdentityInputFilter implements InputFilter {
                                    (int) remaining);
                     result = (int) remaining;
                 } else {
+                    // 如果真实读到的数据小于剩下的
                     result = nRead;
                 }
+                // 记录一下还需要读多少数据
                 if (nRead > 0) {
-                    remaining = remaining - nRead;
+                    remaining = remaining - nRead; // 如果剩余数据比真实读到的数据小，remaining将为负数
                 }
             } else {
+                // 如果没有剩余数据了，返回-1
                 // No more bytes left to be read : return -1 and clear the
                 // buffer
                 chunk.recycle();
@@ -176,28 +185,39 @@ public class IdentityInputFilter implements InputFilter {
 
     @Override
     public long end() throws IOException {
+        // 本次http请求已经处理完了，做收尾工作
+        // 主要处理看请求体是否有剩余数据没有读完
 
+        // 判断剩余数据是否超过了限制
         final boolean maxSwallowSizeExceeded = (maxSwallowSize > -1 && remaining > maxSwallowSize);
         long swallowed = 0;
 
         // Consume extra bytes.
+        // 还有剩余数据
         while (remaining > 0) {
 
+            // 移动pos到lastValid，也可能会从操作系统读数据
             int nread = buffer.doRead(endChunk, null);
             if (nread > 0 ) {
+                // 如果读到了数据
                 swallowed += nread;
+                // 更新剩余数据
                 remaining = remaining - nread;
+                // 如果在遍历剩余数据时，读到的数据超过了maxSwallowSize，则会抛异常，后续逻辑就会把socket关掉
                 if (maxSwallowSizeExceeded && swallowed > maxSwallowSize) {
+                    // 我们不会提早失败，因此客户端可以去读取响应在连接关闭之前
                     // Note: We do not fail early so the client has a chance to
                     // read the response before the connection is closed. See:
                     // https://httpd.apache.org/docs/2.0/misc/fin_wait_2.html#appendix
                     throw new IOException(sm.getString("inputFilter.maxSwallow"));
                 }
             } else { // errors are handled higher up.
+                // 如果本来认为还有剩余数据，但是真正去读的时候没有数据了，nread等于-1，索引剩余数据为0
                 remaining = 0;
             }
         }
 
+        // 读到的真实数据超过了剩余数据，则remaining为负数
         // If too many bytes were read, return the amount.
         return -remaining;
 

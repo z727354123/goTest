@@ -759,6 +759,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
     protected void initializeFilters(int maxTrailerSize, Set<String> allowedTrailerHeaders,
             int maxExtensionSize, int maxSwallowSize) {
         // Create and add the identity filters.
+        //  HTTP 包含 content-length 头部并且指定的长度大于 0 时使用，
+        //  它将根据指定的长度从底层读取响应长度的字节数组，当读取足够数据后，将直接返回 −1，避免再次执行底层操作
         getInputBuffer().addFilter(new IdentityInputFilter(maxSwallowSize));
         getOutputBuffer().addFilter(new IdentityOutputFilter());
 
@@ -1052,6 +1054,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         openSocket = false;
         sendfileInProgress = false;
         readComplete = true;
+        // NioEndpoint返回true, Bio返回false
         if (endpoint.getUsePolling()) {
             keptAlive = false;
         } else {
@@ -1072,6 +1075,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             // Parsing the request header
             try {
                 // 第一次从socket中读取数据，并设置socket的读取数据的超时时间
+                // 对于BIO，一个socket连接建立好后，不一定马上就被Tomcat处理了，其中需要线程池的调度，所以这段等待的时间要算在socket读取数据的时间内
+                // 而对于NIO而言，没有阻塞
                 setRequestLineReadTimeout();
 
                 // 解析请求行
@@ -1220,6 +1225,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                     // to be closed occurred.
                     checkExpectationAndResponseStatus();
                 }
+                // 当前http请求已经处理完了，做一些收尾工作
                 endRequest();
             }
 
@@ -1514,9 +1520,10 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         // Input filter setup
-        // 获取支持的InputFilter，后面根据请求中不同的设置来选择要使用的InputFilter
+        // 获取处理请求体的Tomcat默认的InputFilter
         InputFilter[] inputFilters = getInputBuffer().getFilters();
 
+        // 每个InputFilter都有一个ENCODING_NAME
         // Parse transfer-encoding header
         MessageBytes transferEncodingValueMB = null;
         if (http11) {
@@ -1528,6 +1535,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             int startPos = 0;
             int commaPos = transferEncodingValue.indexOf(',');
             String encodingName = null;
+            // 请求中设置了多个ENCODING_NAME
             while (commaPos != -1) {
                 encodingName = transferEncodingValue.substring(startPos, commaPos);
                 addInputFilter(inputFilters, encodingName);
@@ -1539,6 +1547,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         // Parse content-length header
+        // inputFilters提交跟contextlength相关的IDENTITY_FILTER
         long contentLength = -1;
         try {
             contentLength = request.getContentLengthLong();
@@ -1548,6 +1557,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             badRequest("http11processor.request.multipleContentLength");
         }
         if (contentLength >= 0) {
+            // encodingName等于chunked的时候，contentDelimitation会设置为true，表示是分块传输，所以contentLength没用
             if (contentDelimitation) {
                 // contentDelimitation being true at this point indicates that
                 // chunked encoding is being used but chunked encoding should
@@ -1566,6 +1576,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         // 解析hostname和port
         parseHost(hostValueMB);
 
+        // 没有content-length请求头，添加一个VOID_FILTER中断请求体处理
         if (!contentDelimitation) {
             // If there's no content length
             // (broken HTTP/1.0 or HTTP/1.1), assume
@@ -1912,6 +1923,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         // Finish the handling of the request
         if (getErrorState().isIoAllowed()) {
             try {
+                // 把Inputffer的pos位置移动到底二个请求开始的位置
                 getInputBuffer().endRequest();
             } catch (IOException e) {
                 setErrorState(ErrorState.CLOSE_NOW, e);

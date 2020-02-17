@@ -601,12 +601,12 @@ public class Connector extends LifecycleMBeanBase  {
         } else {
             if ("HTTP/1.1".equals(protocol)) {
                 setProtocolHandlerClassName
-                ("org.apache.coyote.http11.Http11Protocol");
+                ("org.apache.coyote.http11.Http11Protocol");  // BIO
             } else if ("AJP/1.3".equals(protocol)) {
                 setProtocolHandlerClassName
                 ("org.apache.coyote.ajp.AjpProtocol");
             } else if (protocol != null) {
-                setProtocolHandlerClassName(protocol);
+                setProtocolHandlerClassName(protocol); // org.apache.coyote.http11NIOProxot
             }
         }
 

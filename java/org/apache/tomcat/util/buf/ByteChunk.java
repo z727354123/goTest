@@ -378,7 +378,7 @@ public final class ByteChunk extends AbstractChunk {
             if (in == null) {
                 return -1;
             }
-            int n = in.realReadBytes(buff, 0, buff.length);
+            int n = in.realReadBytes(buff, 0, buff.length); //
             if (n < 0) {
                 return -1;
             }
@@ -408,6 +408,7 @@ public final class ByteChunk extends AbstractChunk {
         if (len > getLength()) {
             n = getLength();
         }
+        // 将buff数组中从start位置开始的数据，复制到dest中，长度为n
         System.arraycopy(buff, start, dest, off, n);
         start += n;
         return n;

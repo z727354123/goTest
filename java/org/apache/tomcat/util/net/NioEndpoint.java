@@ -241,6 +241,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
     /**
      * Bytebuffer cache, each channel holds a set of buffers (two, except for SSL holds four)
+     *
+     * 无界线程安全队列，基于链表，先进先出
      */
     protected ConcurrentLinkedQueue<NioChannel> nioChannels = new ConcurrentLinkedQueue<NioChannel>() {
         private static final long serialVersionUID = 1L;
@@ -262,6 +264,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             else return false;
         }
 
+        // 取出队列中的对头元素
         @Override
         public NioChannel poll() {
             NioChannel result = super.poll();
@@ -543,9 +546,11 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 createExecutor();
             }
 
+            // 初始化limitlatch，NioEndpoint默认最大连接数为10000
             initializeConnectionLatch();
 
             // Start poller threads
+            // 有Poller线程来同时处理channel,线程的个数，如果是多核就是两个线程，如果单核就是一个线程
             pollers = new Poller[getPollerThreadCount()];
             for (int i=0; i<pollers.length; i++) {
                 pollers[i] = new Poller();
@@ -665,7 +670,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             socketProperties.setProperties(sock);
 
             // 每接收到一个请求就封装一个对应的NioChannel, 后续就使用这个NioChannel来处理数据
-            NioChannel channel = nioChannels.poll();
+            NioChannel channel = nioChannels.poll(); // 拿出对头的NioChannel
             if ( channel == null ) {
                 // SSL setup
                 if (sslContext != null) {
@@ -692,6 +697,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 }
             }
             // channel和某一个poller绑定，poller是一个线程，也就是一个线程处理一个channel
+            // pollers是一个数组，在NioEndpoint启动的时候会初始化
             getPoller0().register(channel);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -828,7 +834,6 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     SocketChannel socket = null;
                     try {
                         // Accept the next incoming connection from the server
-                        // socket
                         socket = serverSock.accept();
                         System.out.println("接收到请求了才能到这里...");
                     } catch (IOException ioe) {
@@ -1214,6 +1219,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                             if (wakeupCounter.getAndSet(-1) > 0) {
                                 //if we are here, means we have other stuff to do
                                 //do a non blocking select
+                                // 查看现在有几个就绪的通道
                                 keyCount = selector.selectNow();
                             } else {
                                 keyCount = selector.select(selectorTimeout);
@@ -1249,13 +1255,15 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     //either we timed out or we woke up, process events first
                     if ( keyCount == 0 ) hasEvents = (hasEvents | events());
 
+                    // 每个Poller都有一个selector，准备遍历准备就绪的事件
                     Iterator<SelectionKey> iterator =
                         keyCount > 0 ? selector.selectedKeys().iterator() : null;
                     // Walk through the collection of ready keys and dispatch
                     // any active event.
-                    // 循环处理当前channel上就绪的事件
+                    // 循环处理当前就绪的事件
                     while (iterator != null && iterator.hasNext()) {
                         SelectionKey sk = iterator.next();
+                        // 这个attachment是channel.regist的时候传进去的
                         KeyAttachment attachment = (KeyAttachment)sk.attachment();
                         // Attachment may be null if another thread has called
                         // cancelledKey()
@@ -1264,6 +1272,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                         } else {
                             attachment.access();
                             iterator.remove();
+                            // 处理事件
                             processKey(sk, attachment);
                         }
                     }//while
@@ -1298,6 +1307,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 } else if ( sk.isValid() && attachment != null ) {
                     attachment.access();//make sure we don't time out valid sockets
                     sk.attach(attachment);//cant remember why this is here
+
+                    // 获取对应的通道
                     NioChannel channel = attachment.getChannel();
                     // 读就绪或写就绪
                     if (sk.isReadable() || sk.isWritable() ) {
@@ -1309,13 +1320,13 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                                 boolean closeSocket = false;
                                 // Read goes before write
                                 if (sk.isReadable()) {
-                                    // 读数据
+                                    // 从channel中读取数据
                                     if (!processSocket(channel, SocketStatus.OPEN_READ, true)) {
                                         closeSocket = true;
                                     }
                                 }
                                 if (!closeSocket && sk.isWritable()) {
-                                    // 写数据
+                                    // 将数据写入到channel中
                                     if (!processSocket(channel, SocketStatus.OPEN_WRITE, true)) {
                                         closeSocket = true;
                                     }
@@ -1728,6 +1739,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
         @Override
         public void run() {
+            // 获取当前channel上就绪的事件
             SelectionKey key = socket.getIOChannel().keyFor(
                     socket.getPoller().getSelector());
             KeyAttachment ka = null;
@@ -1742,6 +1754,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             if (ka != null && ka.isUpgraded() &&
                     SocketStatus.OPEN_WRITE == status) {
                 synchronized (ka.getWriteThreadLock()) {
+                    // 真正处理事件的逻辑
                     doRun(key, ka);
                 }
             } else {

@@ -439,6 +439,8 @@ public final class Request {
      */
     public int doRead(ByteChunk chunk)
         throws IOException {
+
+        // 从InputStreamInputBuffer中读取数据，其实是标记
         int n = inputBuffer.doRead(chunk, this);
         if (n > 0) {
             bytesRead+=n;
