@@ -544,7 +544,8 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
             }
 
         } else {
-            // buf.length - end表示还能存放多少请求体数据，如果小于4500，那么就新生成一个byte数组
+            // 当读取请求体的数据时
+            // buf.length - end表示还能存放多少请求体数据，如果小于4500，那么就新生成一个byte数组，这个新的数组专门用来盛放请求体
             if (buf.length - end < 4500) {
                 // In this case, the request header was really large, so we allocate a
                 // brand new one; the old one will get GCed when subsequent requests
