@@ -847,8 +847,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
             // Validate and write response headers
             try {
-                prepareResponse();
-                getOutputBuffer().commit();
+                prepareResponse(); // 把响应头的数据写入到InternalOutputBuffer中
+                getOutputBuffer().commit(); // 将InternalOutputBuffer中的数据发送给socket
             } catch (IOException e) {
                 setErrorState(ErrorState.CLOSE_NOW, e);
             }
@@ -872,6 +872,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
         case CLIENT_FLUSH: {
             try {
+                // 将InternalOutputBuffer中的数据发送给socket
                 getOutputBuffer().flush();
             } catch (IOException e) {
                 setErrorState(ErrorState.CLOSE_NOW, e);
@@ -1520,7 +1521,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         // Input filter setup
-        // 获取处理请求体的Tomcat默认的InputFilter
+        // 获取处理请求体的Tomcat默认的InputFilter,默认4个Input的
         InputFilter[] inputFilters = getInputBuffer().getFilters();
 
         // 每个InputFilter都有一个ENCODING_NAME
@@ -1557,7 +1558,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             badRequest("http11processor.request.multipleContentLength");
         }
         if (contentLength >= 0) {
-            // encodingName等于chunked的时候，contentDelimitation会设置为true，表示是分块传输，所以contentLength没用
+            // transfer-encoding等于chunked的时候，contentDelimitation会设置为true，表示是分块传输，所以contentLength没用
             if (contentDelimitation) {
                 // contentDelimitation being true at this point indicates that
                 // chunked encoding is being used but chunked encoding should
@@ -1567,6 +1568,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 headers.removeHeader("content-length");
                 request.setContentLength(-1);
             } else {
+                // 利用IDENTITY_FILTER来处理请求体
                 getInputBuffer().addActiveFilter(inputFilters[Constants.IDENTITY_FILTER]);
                 contentDelimitation = true;
             }
@@ -1576,7 +1578,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         // 解析hostname和port
         parseHost(hostValueMB);
 
-        // 没有content-length请求头，添加一个VOID_FILTER中断请求体处理
+        // 即没有content-length请求头，也没有transfer-encoding请求头，那么用VOID_FILTER来处理请求体，其实就是不处理请求体
         if (!contentDelimitation) {
             // If there's no content length
             // (broken HTTP/1.0 or HTTP/1.1), assume

@@ -491,7 +491,7 @@ public class CoyoteAdapter implements Adapter {
             } else if (!comet) {
                 try {
                     request.finishRequest();
-                    // 会在这里把outputBuffer中的数据发送回socket,包括ResponseHeader和ResponseBody
+                    // 在这里会上层缓冲区
                     response.finishResponse();
                 } finally {
                     if (postParseSuccess) {

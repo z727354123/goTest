@@ -181,6 +181,7 @@ public final class Parameters {
     /** Process the query string into parameters
      */
     public void handleQueryParameters() {
+        // 是否解析过query string了
         if( didQueryParameters ) {
             return;
         }

@@ -3283,8 +3283,10 @@ public class Request implements HttpServletRequest {
                 }
             }
 
+            // 先解析query string
             parameters.handleQueryParameters();
 
+            // 使用过getInputStream()或者使用过getReader()了，这两个方法会去读取请求体，所以使用过这个两个方法后请求体就不能再次使用了
             if (usingInputStream || usingReader) {
                 success = true;
                 return;
@@ -3301,12 +3303,14 @@ public class Request implements HttpServletRequest {
                 contentType = contentType.trim();
             }
 
+            // 等于这个格式的就从请求体力解析，上传文件
             if ("multipart/form-data".equals(contentType)) {
                 parseParts();
                 success = true;
                 return;
             }
 
+            // 当前请求是不是POST方法
             if( !getConnector().isParseBodyMethod(getMethod()) ) {
                 success = true;
                 return;
@@ -3341,6 +3345,7 @@ public class Request implements HttpServletRequest {
                     formData = new byte[len];
                 }
                 try {
+                    // 把请求体的字节数据读给formData
                     if (readPostBody(formData, len) != len) {
                         parameters.setParseFailedReason(FailReason.REQUEST_BODY_INCOMPLETE);
                         return;
@@ -3355,6 +3360,7 @@ public class Request implements HttpServletRequest {
                     parameters.setParseFailedReason(FailReason.CLIENT_DISCONNECT);
                     return;
                 }
+                // 解析请求体数据为parameters
                 parameters.processParameters(formData, 0, len);
             } else if ("chunked".equalsIgnoreCase(
                     coyoteRequest.getHeader("transfer-encoding"))) {

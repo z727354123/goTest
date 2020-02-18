@@ -338,6 +338,7 @@ public final class CharChunk extends AbstractChunk implements CharSequence {
         int sEnd = off + len;
         while (sOff < sEnd) {
             int d = min(limit - end, sEnd - sOff);
+            // 将字符串s的sOff位置到sOff+d的位置之间的数据复制到buff中
             s.getChars(sOff, sOff + d, buff, end);
             sOff += d;
             end += d;
@@ -421,6 +422,7 @@ public final class CharChunk extends AbstractChunk implements CharSequence {
         if (out == null) {
             throw new IOException("Buffer overflow, no sink " + getLimit() + " " + buff.length);
         }
+        // 将buff中的数据写出去
         out.realWriteChars(buff, start, end - start);
         end = start;
     }

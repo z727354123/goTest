@@ -292,6 +292,8 @@ public class OutputBuffer extends Writer
             cb.flushBuffer();
         }
 
+        // 如果没有发送过数据，则设置contentlength
+        // 如果之前发送过数据，那么响应头中就不会有contentlength了，应该这种情况数据是分块发送的了
         if ((!coyoteResponse.isCommitted()) && (coyoteResponse.getContentLengthLong() == -1) &&
                 !coyoteResponse.getRequest().method().equals("HEAD")) {
             // If this didn't cause a commit of the response, the final content
@@ -308,6 +310,7 @@ public class OutputBuffer extends Writer
                 HttpServletResponse.SC_SWITCHING_PROTOCOLS) {
             doFlush(true);
         } else {
+            // realFlush为false, 所以并不会真正把数据发送给socket, 而只是把上层缓冲区的数据发送给下层缓冲区
             doFlush(false);
         }
         closed = true;
@@ -319,6 +322,7 @@ public class OutputBuffer extends Writer
                 CoyoteAdapter.ADAPTER_NOTES);
         req.inputBuffer.close();
 
+        // 把下层的缓冲区中的内容发送给socket
         coyoteResponse.finish();
 
     }
@@ -349,6 +353,7 @@ public class OutputBuffer extends Writer
         try {
             doFlush = true;
             if (initial) {
+                // 先发送请求头，再发送请求体
                 coyoteResponse.sendHeaders();
                 initial = false;
             }
@@ -356,6 +361,7 @@ public class OutputBuffer extends Writer
                 cb.flushBuffer();
             }
             if (bb.getLength() > 0) {
+                // 这里只是把上层缓冲区中的数据发送到底层缓冲区中，所以数据到底会不会发送给socket并不确定
                 bb.flushBuffer();
             }
         } finally {
@@ -363,6 +369,7 @@ public class OutputBuffer extends Writer
         }
 
         if (realFlush) {
+            // 如果是真正flush，把底层缓冲区中的数据发送给socket
             coyoteResponse.action(ActionCode.CLIENT_FLUSH, null);
             // If some exception occurred earlier, or if some IOE occurred
             // here, notify the servlet with an IOE
@@ -389,6 +396,7 @@ public class OutputBuffer extends Writer
     @Override
     public void realWriteBytes(byte buf[], int off, int cnt)
             throws IOException {
+
 
         if (closed) {
             return;
@@ -432,12 +440,15 @@ public class OutputBuffer extends Writer
             return;
         }
 
+        // 将数据先写入ByteChunk的缓冲区中, 如果缓冲区满了，可能会把数据发送出去
         bb.append(b, off, len);
         bytesWritten += len;
 
         // if called from within flush(), then immediately flush
         // remaining bytes
+        // 如果此前已经调用过flush方法
         if (doFlush) {
+            // 那么每次write都把缓冲中的数据发送出去
             bb.flushBuffer();
         }
 

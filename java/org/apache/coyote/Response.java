@@ -575,6 +575,7 @@ public final class Response {
     public void doWrite(ByteChunk chunk)
         throws IOException
     {
+        // 把chunk中的数据写入InternalOutputBuffer
         outputBuffer.doWrite(chunk, this);
         contentWritten+=chunk.getLength();
     }

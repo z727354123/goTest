@@ -210,6 +210,7 @@ public class StringCache {
     }
 
 
+    // 这个StringCache是整个tomcat公用的
     public static String toString(ByteChunk bc) {
 
         // If the cache is null, then either caching is disabled, or we're

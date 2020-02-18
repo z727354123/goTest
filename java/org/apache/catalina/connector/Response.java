@@ -511,6 +511,8 @@ public class Response implements HttpServletResponse {
      */
     public void finishResponse() throws IOException {
         // Writing leftover bytes
+        // 如果上层缓冲区中还有剩下的字节没有发送，则会发送，并关闭缓冲区
+        // 并且，如果此前没有发送过数据，那么需要先发送响应头
         outputBuffer.close();
     }
 

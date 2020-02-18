@@ -177,6 +177,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
     public int doWrite(ByteChunk chunk, Response res)
         throws IOException {
 
+        // 没有发送响应头，则先发送响应头
         if (!committed) {
 
             // Send the connector a request for commit. The connector should
@@ -186,6 +187,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
 
         }
 
+        // 通过outputStreamOutputBuffer发送数据，可能会再次先发到缓冲区，也可能直接发送socket
         if (lastActiveFilter == -1)
             return outputStreamOutputBuffer.doWrite(chunk, res);
         else
@@ -215,6 +217,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
     public void flush()
         throws IOException {
 
+        // 在发送给socket之前，响应体没有提交就要提交，主要就是把响应体的响应头发送给socket
         if (!committed) {
 
             // Send the connector a request for commit. The connector should
@@ -232,6 +235,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
                     log.debug("Flushing the gzip filter at position " + i +
                             " of the filter chain...");
                 }
+                // 看是否需要压缩
                 ((GzipOutputFilter) activeFilters[i]).flush();
                 break;
             }
@@ -291,6 +295,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
      */
     public void endRequest()
         throws IOException {
+        // 注意有子类
 
         if (!committed) {
 

@@ -314,24 +314,29 @@ public final class ByteChunk extends AbstractChunk {
      */
     public void append(byte src[], int off, int len) throws IOException {
         // will grow, up to limit
+        // 向缓冲区中添加数据，需要开辟缓存区空间，缓存区初始大小为256，最大大小可以设置，默认为8192
         makeSpace(len);
-        int limit = getLimitInternal();
+        int limit = getLimitInternal(); // 缓冲区大小的最大限制
 
         // Optimize on a common case.
         // If the buffer is empty and the source is going to fill up all the
         // space in buffer, may as well write it directly to the output,
         // and avoid an extra copy
+        // 如果要添加到缓冲区中的数据大小正好等于最大限制，并且缓冲区是空的，那么则直接把数据发送给out，不要存在缓冲区中了
         if (optimizedWrite && len == limit && end == start && out != null) {
             out.realWriteBytes(src, off, len);
             return;
         }
 
         // if we are below the limit
+        // 如果要发送的数据长度小于缓冲区中剩余空间，则把数据填充到剩余空间
         if (len <= limit - end) {
             System.arraycopy(src, off, buff, end, len);
             end += len;
             return;
         }
+
+        // 如果要发送的数据长度大于缓冲区中剩余空间，
 
         // Need more space than we can afford, need to flush buffer.
 
@@ -340,19 +345,25 @@ public final class ByteChunk extends AbstractChunk {
         // We chunk the data into slices fitting in the buffer limit, although
         // if the data is written directly if it doesn't fit.
 
+        // 缓冲区中还能容纳avail个字节的数据
         int avail = limit - end;
+        // 先将一部分数据复制到buff，填满缓冲区
         System.arraycopy(src, off, buff, end, avail);
         end += avail;
 
+        // 将缓冲区的数据发送出去
         flushBuffer();
 
+        // 还剩下一部分数据没有放到缓冲区中的
         int remain = len - avail;
 
+        // 如果剩下的数据 超过 缓冲区剩余大小,那么就把数据直接发送出去
         while (remain > (limit - end)) {
             out.realWriteBytes(src, (off + len) - remain, limit - end);
             remain = remain - (limit - end);
         }
 
+        // 知道最后剩下的数据能放入缓冲区，那么就放入到缓冲区
         System.arraycopy(src, (off + len) - remain, buff, end, remain);
         end += remain;
     }
@@ -454,17 +465,21 @@ public final class ByteChunk extends AbstractChunk {
     public void makeSpace(int count) {
         byte[] tmp = null;
 
+        // 缓冲区的最大大小，可以设置，默认为8192
         int limit = getLimitInternal();
 
         long newSize;
+        // end表示缓冲区中已有数据的最后一个位置，desiredSize表示新数据+已有数据共多大
         long desiredSize = end + count;
 
         // Can't grow above the limit
+        // 如果超过限制了，那就只能开辟limit大小的缓冲区了
         if (desiredSize > limit) {
             desiredSize = limit;
         }
 
         if (buff == null) {
+            // 初始化字节数组
             if (desiredSize < 256) {
                 desiredSize = 256; // take a minimum
             }
@@ -473,22 +488,27 @@ public final class ByteChunk extends AbstractChunk {
 
         // limit < buf.length (the buffer is already big)
         // or we already have space XXX
+        // 如果需要的大小小于buff长度，那么不需要增大缓冲区
         if (desiredSize <= buff.length) {
             return;
         }
         // grow in larger chunks
+        // 如果需要的大小大于buff.length, 小于2*buff.length，则缓冲区的新大小为2*buff.length，
         if (desiredSize < 2L * buff.length) {
             newSize = buff.length * 2L;
         } else {
+            // 否则为buff.length * 2L + count
             newSize = buff.length * 2L + count;
         }
 
+        // 扩容后看是否超过限制
         if (newSize > limit) {
             newSize = limit;
         }
         tmp = new byte[(int) newSize];
 
         // Compacts buffer
+        // 把当前buff中的内容复制到tmp中
         System.arraycopy(buff, start, tmp, 0, end - start);
         buff = tmp;
         tmp = null;
