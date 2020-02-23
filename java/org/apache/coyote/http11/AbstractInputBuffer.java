@@ -294,7 +294,11 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
     @Override
     public int doRead(ByteChunk chunk, Request req)
         throws IOException {
-        // 读请求体的数据，过滤器模式
+        // 如果没有ActiveFilter，则直接从inputStreamInputBuffer中读取
+        // 如果有ActiveFilter，则调用对应的ActiveFilter读取
+        // 要么是IdentityInputFilter: 每次读多少不确定，看能从操作系统拿到多少
+        // 要么是ChunkedInputFilter: 客户端分块发送的，ChunkedInputFilter一次读一块数据
+        // 要么是VoidInputFilter：直接读不到数据，不管到底有没有请求体
 
         if (lastActiveFilter == -1)
             return inputStreamInputBuffer.doRead(chunk, req);

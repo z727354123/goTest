@@ -156,11 +156,13 @@ public class InternalNioOutputBuffer extends AbstractOutputBuffer<NioChannel> {
         long writeTimeout = att.getWriteTimeout();
         Selector selector = null;
         try {
+            // 从select池中获取一个select
             selector = pool.get();
         } catch ( IOException x ) {
             //ignore
         }
         try {
+            // 把bytebuffer中的数据通过selector写入到socket中, 阻塞写入，一定要把bytebuffer中的数据写入到socket中，直到超时
             written = pool.write(bytebuffer, socket, selector, writeTimeout, block);
             //make sure we are flushed
             do {
@@ -208,11 +210,14 @@ public class InternalNioOutputBuffer extends AbstractOutputBuffer<NioChannel> {
     private synchronized void addToBB(byte[] buf, int offset, int length) throws IOException {
         while (length > 0) {
             int thisTime = length;
+            // ByteBuffer中已经满了则把数据写入到socket中
             if (socket.getBufHandler().getWriteBuffer().position() ==
                     socket.getBufHandler().getWriteBuffer().capacity()
                     || socket.getBufHandler().getWriteBuffer().remaining()==0) {
+                // 把ByteBuffer中的数据写入到socket中
                 flushBuffer();
             }
+            // 如果待写入的数据大于ByteBuffer剩余的空间，那么就填满剩余空间，下次while继续写入
             if (thisTime > socket.getBufHandler().getWriteBuffer().remaining()) {
                 thisTime = socket.getBufHandler().getWriteBuffer().remaining();
             }
@@ -239,7 +244,10 @@ public class InternalNioOutputBuffer extends AbstractOutputBuffer<NioChannel> {
 
         //write to the socket, if there is anything to write
         if (socket.getBufHandler().getWriteBuffer().position() > 0) {
+            // 如果ByteBuffer中有数据，就写入到socket
+
             socket.getBufHandler().getWriteBuffer().flip();
+            // 以阻塞的方式写入，表示下面这个方法一点要把数据写入到socket中
             writeToSocket(socket.getBufHandler().getWriteBuffer(),true, false);
         }
     }
@@ -259,6 +267,7 @@ public class InternalNioOutputBuffer extends AbstractOutputBuffer<NioChannel> {
          */
         @Override
         public int doWrite(ByteChunk chunk, Response res) throws IOException {
+            // 把chunk中的数据写入nio的buffer中
             try {
                 int len = chunk.getLength();
                 int start = chunk.getStart();

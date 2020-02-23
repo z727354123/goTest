@@ -187,7 +187,10 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
 
         }
 
+        // chunk, content-
+
         // 通过outputStreamOutputBuffer发送数据，可能会再次先发到缓冲区，也可能直接发送socket
+        // 在发送响应头的时候，会设置ActiveFilter，如果没有则直接发给outputStreamOutputBuffer，如果有先经过ActiveFilter
         if (lastActiveFilter == -1)
             return outputStreamOutputBuffer.doWrite(chunk, res);
         else

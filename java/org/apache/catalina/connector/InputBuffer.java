@@ -288,7 +288,7 @@ public class InputBuffer extends Reader
             state = BYTE_STATE;
         }
 
-        // 读取数据到bb
+        // 上层缓冲区中没有数据，则从底层取（这里的底层是InputStreamInputBuffer中的buff）
         int result = coyoteRequest.doRead(bb);
 
         return result;
@@ -315,6 +315,7 @@ public class InputBuffer extends Reader
             throw new IOException(sm.getString("inputBuffer.streamClosed"));
         }
 
+        // 从bb中截取一部分数据到b中
         return bb.substract(b, off, len);
     }
 

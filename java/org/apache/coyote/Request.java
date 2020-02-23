@@ -440,7 +440,7 @@ public final class Request {
     public int doRead(ByteChunk chunk)
         throws IOException {
 
-        // 从InputStreamInputBuffer中读取数据，其实是标记
+        // 从InputStreamInputBuffer中读取数据，其实是标记，这里首先进入AbstractInputBuffer中的doRead方法
         int n = inputBuffer.doRead(chunk, this);
         if (n > 0) {
             bytesRead+=n;

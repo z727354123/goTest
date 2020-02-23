@@ -134,11 +134,12 @@ public class IdentityInputFilter implements InputFilter {
         int result = -1;
 
         // contentLength表示请求体的长度，当读取请求体时，只会返回这么长的数据
-        if (contentLength >= 0) {
+        // remaining
+        if (contentLength >= 0) {  // 100
             // 可能会多次读取请求体，所以记录一下请求体还剩下多少
-            if (remaining > 0) {
-                // 这里的buffer是InputSteamInputBuffer，可能会从操作系统的RecvBuf中读取数据，nRead表示读到了多少了数据
-                int nRead = buffer.doRead(chunk, req);
+            if (remaining > 0) { // 10
+                // 这里的buffer是InputSteamInputBuffer，会从操作系统的RecvBuf中读取数据，nRead表示读到了多少了数据
+                int nRead = buffer.doRead(chunk, req); // 20
 
                 // 如果读到的数据超过了剩余部分，那么将chunk的标记缩小，缩小为剩余部分的最后一个位置，多余数据不属于请求体了
                 if (nRead > remaining) {
@@ -154,6 +155,7 @@ public class IdentityInputFilter implements InputFilter {
                 }
                 // 记录一下还需要读多少数据
                 if (nRead > 0) {
+                    // 10 - 20==10
                     remaining = remaining - nRead; // 如果剩余数据比真实读到的数据小，remaining将为负数
                 }
             } else {
@@ -192,11 +194,12 @@ public class IdentityInputFilter implements InputFilter {
         final boolean maxSwallowSizeExceeded = (maxSwallowSize > -1 && remaining > maxSwallowSize);
         long swallowed = 0;
 
+        // remaining==contentlengt
         // Consume extra bytes.
         // 还有剩余数据
         while (remaining > 0) {
 
-            // 移动pos到lastValid，也可能会从操作系统读数据
+            // 从操作系统读取数据
             int nread = buffer.doRead(endChunk, null);
             if (nread > 0 ) {
                 // 如果读到了数据

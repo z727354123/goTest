@@ -1082,7 +1082,9 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
                 // 解析请求行
                 if (!getInputBuffer().parseRequestLine(keptAlive)) {
-                    // 如果解析请求行失败，那么进行相应的处理
+                    // 下面这个方法在NIO时有用，比如在解析请求行时，如果没有从操作系统读到数据，则上面的方法会返回false
+                    // 而下面这个方法会返回true，从而退出while，表示此处read事件处理结束
+                    // 到下一次read事件发生了，就会从小进入到while中
                     if (handleIncompleteRequestLineRead()) {
                         break;
                     }
@@ -1322,6 +1324,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         if (endpoint.isSSLEnabled()) {
             request.scheme().setString("https");
         }
+
+        //
         MessageBytes protocolMB = request.protocol();
         if (protocolMB.equals(Constants.HTTP_11)) {
             http11 = true;
@@ -1386,7 +1390,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         // Check user-agent header
-        // 请求本来是http1.1或keepAlive的，如果请求中所指定的user-agent被限制了，则http11=false, keepAlive=false
+        // 请求本来是http1.1或keepAlive的，如果请求中所指定的user-agent被限制了，不支持长连接
         if ((restrictedUserAgents != null) && ((http11) || (keepAlive))) {
             MessageBytes userAgentValueMB = headers.getValue("user-agent");
             // Check in the restricted list, and adjust the http11
@@ -1645,6 +1649,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             return;
         }
 
+        // 如果是这些状态，则不发送响应体
         int statusCode = response.getStatus();
         if (statusCode < 200 || statusCode == 204 || statusCode == 205 ||
                 statusCode == 304) {
@@ -1662,6 +1667,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             }
         }
 
+        // 如果请求方法是HEAD，也不发送响应体
         MessageBytes methodMB = request.method();
         if (methodMB.equals("HEAD")) {
             // No entity body
@@ -1704,6 +1710,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             }
         }
 
+        // 如果response中有content-length，则通过IDENTITY_FILTER发送
         long contentLength = response.getContentLengthLong();
         boolean connectionClosePresent = false;
         if (contentLength != -1) {
@@ -1758,7 +1765,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         // Connection: close header.
         keepAlive = keepAlive && !statusDropsConnection(statusCode);
         if (!keepAlive) {
-            // socket连接不再活跃了，客户端处理完结果后应该关闭socket
+            // socket连接不再活跃了，会关闭socket
             // Avoid adding the close header twice
             if (!connectionClosePresent) {
                 headers.addValue(Constants.CONNECTION).setString(
@@ -1769,8 +1776,10 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         // Build the response header
+        // 先发送协议和状态 比如HTTP/1.1 200 OK
         getOutputBuffer().sendStatus();
 
+        // 再发送响应头中的Server
         // Add server header
         if (server != null) {
             // Always overrides anything the app might set
@@ -1925,7 +1934,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         // Finish the handling of the request
         if (getErrorState().isIoAllowed()) {
             try {
-                // 把Inputffer的pos位置移动到底二个请求开始的位置
+                // 把InputBuffer的pos位置移动到第二个请求开始的位置
                 getInputBuffer().endRequest();
             } catch (IOException e) {
                 setErrorState(ErrorState.CLOSE_NOW, e);

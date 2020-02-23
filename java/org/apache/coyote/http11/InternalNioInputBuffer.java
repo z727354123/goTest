@@ -423,6 +423,8 @@ public class InternalNioInputBuffer extends AbstractInputBuffer<NioChannel> {
      */
 
     private int readSocket(boolean timeout, boolean block) throws IOException {
+        // 读请求体数据的时候需要阻塞读
+
         int nRead = 0;
         socket.getBufHandler().getReadBuffer().clear();
         if ( block ) {
@@ -453,6 +455,7 @@ public class InternalNioInputBuffer extends AbstractInputBuffer<NioChannel> {
             socket.getBufHandler().getReadBuffer().flip();
             socket.getBufHandler().getReadBuffer().limit(nRead);
             expand(nRead + pos);
+            // 把readBuffer中的数据转移到buf中
             socket.getBufHandler().getReadBuffer().get(buf, pos, nRead);
             lastValid = pos + nRead;
             return nRead;
@@ -797,7 +800,7 @@ public class InternalNioInputBuffer extends AbstractInputBuffer<NioChannel> {
     }
 
     protected boolean fill(boolean timeout, boolean block) throws IOException, EOFException {
-
+        // 读请求体数据的时候需要阻塞读
 
         boolean read = false;
 

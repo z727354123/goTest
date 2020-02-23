@@ -176,28 +176,37 @@ public class NioSelectorPool {
         SelectionKey key = null;
         int written = 0;
         boolean timedout = false;
-        int keycount = 1; //assume we can write
+        int keycount = 1; //assume we can write 假设现在就可以写
         long time = System.currentTimeMillis(); //start the timeout timer
         try {
+            // 没有超时并且buf中有数据
             while ( (!timedout) && buf.hasRemaining() ) {
                 int cnt = 0;
                 if ( keycount > 0 ) { //only write if we were registered for a write
+                    // 写数据，返回的数字是多少，表示写了多少，可能返回0，表示没有写入数据
                     cnt = socket.write(buf); //write the data
                     if (cnt == -1) throw new EOFException();
 
                     written += cnt;
                     if (cnt > 0) {
+                        // 如果有数据写到socket中了，就继续while，看buf中还有没剩余数据
                         time = System.currentTimeMillis(); //reset our timeout timer
                         continue; //we successfully wrote, try again without a selector
                     }
+                    // 如果没有写入数据并且是阻塞的，则不会break
                     if (cnt==0 && (!block)) break; //don't block
                 }
                 if ( selector != null ) {
                     //register OP_WRITE to the selector
+                    // 向selector注册一个写事件
                     if (key==null) key = socket.getIOChannel().register(selector, SelectionKey.OP_WRITE);
                     else key.interestOps(SelectionKey.OP_WRITE);
+
+                    // 查询是否有写事件发生
                     keycount = selector.select(writeTimeout);
                 }
+
+                // 看是否超时
                 if (writeTimeout > 0 && (selector == null || keycount == 0) ) timedout = (System.currentTimeMillis()-time)>=writeTimeout;
             }//while
             if ( timedout ) throw new SocketTimeoutException();

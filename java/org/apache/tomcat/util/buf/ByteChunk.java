@@ -315,6 +315,7 @@ public final class ByteChunk extends AbstractChunk {
     public void append(byte src[], int off, int len) throws IOException {
         // will grow, up to limit
         // 向缓冲区中添加数据，需要开辟缓存区空间，缓存区初始大小为256，最大大小可以设置，默认为8192
+        // 意思是现在要想缓冲区存放数据，首先得去开辟空间，但是空间是有一个最大限制的，所以要存放的数据可能小于限制，也可能大于限制
         makeSpace(len);
         int limit = getLimitInternal(); // 缓冲区大小的最大限制
 
@@ -412,14 +413,16 @@ public final class ByteChunk extends AbstractChunk {
 
 
     public int substract(byte dest[], int off, int len) throws IOException {
+        // 这里会对当前ByteChunk初始化
         if (checkEof()) {
             return -1;
         }
         int n = len;
+        // 如果需要的数据超过buff中标记的数据长度
         if (len > getLength()) {
             n = getLength();
         }
-        // 将buff数组中从start位置开始的数据，复制到dest中，长度为n
+        // 将buff数组中从start位置开始的数据，复制到dest中，长度为n，desc数组中就有值了
         System.arraycopy(buff, start, dest, off, n);
         start += n;
         return n;
@@ -428,9 +431,11 @@ public final class ByteChunk extends AbstractChunk {
 
     private boolean checkEof() throws IOException {
         if ((end - start) == 0) {
+            // 如果bytechunk没有标记数据了，则开始比较
             if (in == null) {
                 return true;
             }
+            // 从in中读取buff长度大小的数据，读到buff中，真实读到的数据为n
             int n = in.realReadBytes(buff, 0, buff.length);
             if (n < 0) {
                 return true;
@@ -492,6 +497,9 @@ public final class ByteChunk extends AbstractChunk {
         if (desiredSize <= buff.length) {
             return;
         }
+
+        // 下面代码的前提条件是，需要的大小超过了buff的长度
+
         // grow in larger chunks
         // 如果需要的大小大于buff.length, 小于2*buff.length，则缓冲区的新大小为2*buff.length，
         if (desiredSize < 2L * buff.length) {
@@ -501,7 +509,7 @@ public final class ByteChunk extends AbstractChunk {
             newSize = buff.length * 2L + count;
         }
 
-        // 扩容后看是否超过限制
+        // 扩容前没有超过限制，扩容后可能超过限制
         if (newSize > limit) {
             newSize = limit;
         }

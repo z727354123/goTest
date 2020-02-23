@@ -257,6 +257,7 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
                 //  - this is an upgraded connection
                 //  - the request line/headers have not been completely
                 //    read
+                // 如果发现数据没有读取完成，则再次注册读事件
                 socket.getSocket().getPoller().add(socket.getSocket());
             }
         }

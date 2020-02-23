@@ -179,6 +179,7 @@ public class ChunkedInputFilter implements InputFilter {
         if (endChunk) {
             return -1;
         }
+        // chunk会标记一个数据块的内容区域
 
         checkError();
 
@@ -205,22 +206,26 @@ public class ChunkedInputFilter implements InputFilter {
             }
         }
 
+        // 如果需要的数据比读到的多，则先标记一下，并且算一下还需要读多少数据
         if (remaining > (lastValid - pos)) {
             result = lastValid - pos;
             remaining = remaining - result;
             chunk.setBytes(buf, pos, result);
             pos = lastValid;
         } else {
+            // 如果读到的数据超过了需要的数据，那么则标记到需要的数据
             result = remaining;
             chunk.setBytes(buf, pos, remaining);
             pos = pos + remaining;
             remaining = 0;
             //we need a CRLF
+            // 如果pos向后移一位之后没有数据了
             if ((pos+1) >= lastValid) {
                 //if we call parseCRLF we overrun the buffer here
                 //so we defer it to the next call BZ 11117
                 needCRLFParse = true;
             } else {
+                // 还有数据则判断紧跟着的数据是不是CRLF
                 parseCRLF(false); //parse the CRLF immediately
             }
         }
@@ -380,16 +385,20 @@ public class ChunkedInputFilter implements InputFilter {
             if (!eol) {
                 pos++;
             }
+            // 遇到回车换行则退出循环，此时pos指向chunk头的结束位置，result表示这个chunk的内容长度
         }
+
 
         if (readDigit == 0 || result < 0) {
             return false;
         }
 
+        // 如果内容长度为0，表示是最后一个chunk
         if (result == 0) {
             endChunk = true;
         }
 
+        //需要处理remaining这么多数据
         remaining = result;
         return true;
     }

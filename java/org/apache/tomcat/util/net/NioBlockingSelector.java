@@ -170,6 +170,7 @@ public class NioBlockingSelector {
         try {
             while(!timedout) {
                 if (keycount > 0) { //only read if we were registered for a read
+                    // 先尝试着读一下，如果没有读到数据，则返回0
                     read = socket.read(buf);
                     if (read == -1)
                         throw new EOFException();
@@ -177,20 +178,26 @@ public class NioBlockingSelector {
                         break;
                 }
                 try {
+                    // 开启latch
                     if ( att.getReadLatch()==null || att.getReadLatch().getCount()==0) att.startReadLatch(1);
+
+                    // 将注册读事件，通过events队列和线程实现，poller为BlockPoller
                     poller.add(att,SelectionKey.OP_READ, reference);
                     if (readTimeout < 0) {
                         att.awaitReadLatch(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
                     } else {
+                        // 注册完事件后就会阻塞，直到BlockPoller发现了读事件，才会解阻塞
                         att.awaitReadLatch(readTimeout, TimeUnit.MILLISECONDS);
                     }
                 }catch (InterruptedException ignore) {
                     Thread.interrupted();
                 }
+                // 不是正常被poller解阻塞的
                 if ( att.getReadLatch()!=null && att.getReadLatch().getCount()> 0) {
                     //we got interrupted, but we haven't received notification from the poller.
                     keycount = 0;
                 }else {
+                    // 解阻塞之后就得到了1个读事件，就可以读取数据了
                     //latch countdown has happened
                     keycount = 1;
                     att.resetReadLatch();

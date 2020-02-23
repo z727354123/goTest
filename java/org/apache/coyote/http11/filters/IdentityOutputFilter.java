@@ -65,8 +65,12 @@ public class IdentityOutputFilter implements OutputFilter {
     public int doWrite(ByteChunk chunk, Response res)
         throws IOException {
 
+        // doWrite是吧chunk数据写入buffer
+        // doRead是从buffer中读出数据到chunk
+
         int result = -1;
 
+        // contentlength是多少，就会写多少，不会多写
         if (contentLength >= 0) {
             if (remaining > 0) {
                 result = chunk.getLength();
