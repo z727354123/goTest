@@ -186,7 +186,7 @@ public abstract class AbstractEndpoint<S> {
     public int getAcceptorThreadPriority() { return acceptorThreadPriority; }
 
 
-    private int maxConnections = 10000;
+    private int maxConnections = 10000; // NIO
     public void setMaxConnections(int maxCon) {
         this.maxConnections = maxCon;
         LimitLatch latch = this.connectionLimitLatch;
@@ -570,7 +570,7 @@ public abstract class AbstractEndpoint<S> {
         internalExecutor = true;
         TaskQueue taskqueue = new TaskQueue();
         TaskThreadFactory tf = new TaskThreadFactory(getName() + "-exec-", daemon, getThreadPriority());
-        // 默认的线程数量为10
+        // 默认的线程数量为10, max200
         executor = new ThreadPoolExecutor(getMinSpareThreads(), getMaxThreads(), 60, TimeUnit.SECONDS,taskqueue, tf);
         taskqueue.setParent( (ThreadPoolExecutor) executor);
     }

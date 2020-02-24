@@ -98,10 +98,13 @@ public class NioBlockingSelector {
         try {
             while ( (!timedout) && buf.hasRemaining()) {
                 if (keycount > 0) { //only write if we were registered for a write
+                    // 先尝试去write一下，没有写入任何数据就返回0
                     int cnt = socket.write(buf); //write the data
                     if (cnt == -1)
                         throw new EOFException();
+                    // 统计写入了多少数据了
                     written += cnt;
+                    //
                     if (cnt > 0) {
                         time = System.currentTimeMillis(); //reset our timeout timer
                         continue; //we successfully wrote, try again without a selector
@@ -260,6 +263,7 @@ public class NioBlockingSelector {
                     if ( ch == null ) return;
                     SelectionKey sk = ch.keyFor(selector);
                     try {
+                        // 将事件注册到BlockPoller的selector上，sharedSelector
                         if (sk == null) {
                             sk = ch.register(selector, ops, key);
                             ref.key = sk;
@@ -275,7 +279,9 @@ public class NioBlockingSelector {
                     }
                 }
             };
+            // 添加进事件队列
             events.offer(r);
+            // 添加事件成功后，立即唤醒select.select()方法
             wakeup();
         }
 
@@ -348,16 +354,22 @@ public class NioBlockingSelector {
         public void run() {
             while (run) {
                 try {
-                    events();
+                    events(); // 执行PollerEvent实现，就是Runnable
                     int keyCount = 0;
                     try {
+                        // 这个wakeupCounter只有0，-1，1三中情况
                         int i = wakeupCounter.get();
+                        // i==1表示添加了PollerEvent，并且上面执行了events方法，所以应该可以直接selectNow查询到事件
                         if (i>0)
                             keyCount = selector.selectNow();
                         else {
+                            // 此处i只可能为0，然后改成-1，表示没有添加过PollerEvent，然后阻塞获取
+                            // 在阻塞获取就绪事件的过程中，很有可能添加了PollerEvent进入到了events中，并且会被唤醒，调用selector.wakeup()
                             wakeupCounter.set(-1);
                             keyCount = selector.select(1000);
                         }
+
+                        // 不管有没有查询到就绪事件，都会改为0
                         wakeupCounter.set(0);
                         if (!run) break;
                     }catch ( NullPointerException x ) {

@@ -312,12 +312,15 @@ public class CoyoteAdapter implements Adapter {
             // Has an error occurred during async processing that needs to be
             // processed by the application's error page mechanism (or Tomcat's
             // if the application doesn't define one)?
+            // 不是异步转发，但是有错，需要再次调用容器去拿错误页面
             if (!request.isAsyncDispatching() && request.isAsync() &&
                     response.isErrorReportRequired()) {
+
                 connector.getService().getContainer().getPipeline().getFirst().invoke(
                         request, response);
             }
 
+            // 是异步转发，不考虑
             if (request.isAsyncDispatching()) {
                 connector.getService().getContainer().getPipeline().getFirst().invoke(
                         request, response);
@@ -326,6 +329,7 @@ public class CoyoteAdapter implements Adapter {
                     asyncConImpl.setErrorState(t, true);
                 }
             }
+
 
             if (request.isComet()) {
                 if (!response.isClosed() && !response.isError()) {
@@ -347,6 +351,8 @@ public class CoyoteAdapter implements Adapter {
                     request.setFilterChain(null);
                 }
             }
+
+            // 如果当前异步状态不是异步了，比如DISPATCHED，那么就将缓冲区里的数据发送出去
             if (!request.isAsync() && !comet) {
                 try {
                     request.finishRequest();
@@ -367,6 +373,7 @@ public class CoyoteAdapter implements Adapter {
                 }
             }
 
+
             // Check to see if the processor is in an error state. If it is,
             // bail out now.
             AtomicBoolean error = new AtomicBoolean(false);
@@ -376,6 +383,7 @@ public class CoyoteAdapter implements Adapter {
                     // Connection will be forcibly closed which will prevent
                     // completion happening at the usual point. Need to trigger
                     // call to onComplete() here.
+                    // 如果是在complete的过程中，就调用一下AsyncListener
                     res.action(ActionCode.ASYNC_POST_PROCESS,  null);
                 }
                 success = false;

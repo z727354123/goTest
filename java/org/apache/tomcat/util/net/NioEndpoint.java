@@ -842,8 +842,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     SocketChannel socket = null;
                     try {
                         // Accept the next incoming connection from the server
-                        socket = serverSock.accept();
-                        System.out.println("接收到请求了才能到这里...");
+                        socket = serverSock.accept(); //
                     } catch (IOException ioe) {
                         //we didn't get a socket
                         countDownConnection();
@@ -1784,10 +1783,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             } else {
                 // 在nio中，每产生一个就绪的io事件，就会通过一个线程来处理该事件，需要进行同步
                 // 意思是，多个线程只能并发处理不同socket,不能处理同一个socket
-                System.out.println("开始处理事件..."+key.readyOps());
                 synchronized (socket) {
                     // 真正处理事件的逻辑
-                    System.out.println("或得到了锁..."+key.readyOps());
                     doRun(key, ka);
                 }
             }

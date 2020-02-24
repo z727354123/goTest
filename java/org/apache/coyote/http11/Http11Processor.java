@@ -384,7 +384,10 @@ public class Http11Processor extends AbstractHttp11Processor<Socket> {
             break;
         }
         case ASYNC_COMPLETE: {
+
+
             if (asyncStateMachine.asyncComplete()) {
+                // 当调用complete方法时
                 ((JIoEndpoint) endpoint).processSocketAsync(this.socketWrapper,
                         SocketStatus.OPEN_READ);
             }

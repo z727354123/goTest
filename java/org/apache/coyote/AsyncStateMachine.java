@@ -268,10 +268,12 @@ public class AsyncStateMachine<S> {
 
 
     public synchronized boolean asyncComplete() {
+        // 调用complete方法时，当前线程还没有结束
         if (!ContainerThreadMarker.isContainerThread() && state == AsyncState.STARTING) {
             state = AsyncState.COMPLETE_PENDING;
             return false;
         } else {
+            // 如果servlet中调用complete方法时，已经在监控socket是否超时过程中了，那么直接调用doComplete
             return doComplete();
         }
     }

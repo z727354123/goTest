@@ -615,7 +615,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                     processor = recycledProcessors.poll();
                 }
                 if (processor == null) {
-                    processor = createProcessor();
+                    processor = createProcessor(); // HTTP11NIOProce
                 }
 
                 initSsl(wrapper, processor);
@@ -628,6 +628,11 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                         // Don't do this for Comet we need to generate an end
                         // event (see BZ 54022)
                     } else if (processor.isAsync() || state == SocketState.ASYNC_END) {
+                        // 要么Tomcat线程还没结束，业务线程就已经调用过complete方法了，然后利用while走到这个分支
+                        // 要么Tomcat线程结束后，在超时时间内业务线程调用complete方法，然后构造一个新的SocketProcessor对象扔到线程池里走到这个分支
+                        // 要么Tomcat线程结束后，超过超时时间了，由AsyncTimeout线程来构造一个SocketProcessor对象扔到线程池里走到这个分支
+                        // 不管怎么样，在整个调用异步servlet的流程中，此分支只经历一次，用来将output缓冲区中的内容发送出去
+
                         state = processor.asyncDispatch(status);
                         if (state == SocketState.OPEN) {
                             // release() won't get called so in case this request
@@ -654,6 +659,14 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                     }
 
                     if (state != SocketState.CLOSED && processor.isAsync()) {
+                        // 代码执行到这里，就去判断一下之前有没有调用过complete方法
+                        // 如果调用，那么当前的AsyncState就会从COMPLETE_PENDING-->调用doComplete方法改为COMPLETING，SocketState为ASYNC_END
+                        // 如果没有调用，那么当前的AsyncState就会从STARTING-->STARTED，SocketState为LONG
+                        //
+                        // 状态转换，有三种情况
+                        // 1. COMPLETE_PENDING--->COMPLETING，COMPLETE_PENDING是在调用complete方法时候由STARTING改变过来的
+                        // 2. STARTING---->STARTED，STARTED的下一个状态需要有complete方法来改变，会改成COMPLETING
+                        // 3. COMPLETING---->DISPATCHED
                         state = processor.asyncPostProcess();
                     }
 
@@ -692,6 +705,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                                 "], Status in: [" + status +
                                 "], State out: [" + state + "]");
                     }
+                    // 如果在访问异步servlet时，代码执行到这里，已经调用过complete方法了，那么状态就是SocketState.ASYNC_END
                 } while (state == SocketState.ASYNC_END ||
                         state == SocketState.UPGRADING ||
                         state == SocketState.UPGRADING_TOMCAT);

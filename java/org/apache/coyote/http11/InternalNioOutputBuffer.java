@@ -247,7 +247,7 @@ public class InternalNioOutputBuffer extends AbstractOutputBuffer<NioChannel> {
             // 如果ByteBuffer中有数据，就写入到socket
 
             socket.getBufHandler().getWriteBuffer().flip();
-            // 以阻塞的方式写入，表示下面这个方法一点要把数据写入到socket中
+            // 以阻塞的方式写入，表示下面这个方法一定要把数据写入到socket中
             writeToSocket(socket.getBufHandler().getWriteBuffer(),true, false);
         }
     }
@@ -281,6 +281,7 @@ public class InternalNioOutputBuffer extends AbstractOutputBuffer<NioChannel> {
                 throw ioe;
             }
         }
+
 
         @Override
         public long getBytesWritten() {

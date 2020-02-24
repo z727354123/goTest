@@ -157,7 +157,7 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
     public void endRequest()
         throws IOException {
 
-        super.endRequest(); // 先调用父类去发送请求头
+        super.endRequest(); // 先调用父类去发送请求头 OutputFileter.end()
 
         // 如果使用了socketbuffer，则将socketbuffer中的数据发送出去
         if (useSocketBuffer) {

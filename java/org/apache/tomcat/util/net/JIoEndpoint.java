@@ -161,6 +161,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                             !handler.isAvailable(socket)) {
                         // Prevent multiple timeouts
                         socket.setTimeout(-1);
+                        // socket超时了
                         processSocketAsync(socket,SocketStatus.TIMEOUT);
                     }
                 }
@@ -353,6 +354,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                         socket.access();
                         launch = true;
                     } else if (state == SocketState.LONG) {
+                        // socket不会关闭，但是当前线程会执行结束
                         socket.access();
                         waitingRequests.add(socket);
                     }

@@ -1715,6 +1715,7 @@ public class Request implements HttpServletRequest {
             asyncContext = new AsyncContextImpl(this);
         }
 
+        // 这里就是把request对象和response对象设置到asyncContext中
         asyncContext.setStarted(getContext(), request, response,
                 request==getRequest() && response==getResponse().getResponse());
         asyncContext.setTimeout(getConnector().getAsyncTimeout());

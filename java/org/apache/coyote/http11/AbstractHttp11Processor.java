@@ -1260,6 +1260,9 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             rp.setStage(org.apache.coyote.Constants.STAGE_KEEPALIVE);
 
             // 如果处理完当前这个Http请求之后，发现socket里没有下一个请求了,那么就退出当前循环
+            // 如果是keepalive，就不会关闭socket, 如果是close就会关闭socket
+            // 对于keepalive的情况，因为是一个线程处理一个socket,当退出这个while后，当前线程就会介绍，
+            // 当时对于socket来说，它仍然要继续介绍连接，所以又会新开一个线程继续来处理这个socket
             if (breakKeepAliveLoop(socketWrapper)) {
                 break;
             }
@@ -1272,6 +1275,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         if (getErrorState().isError() || endpoint.isPaused()) {
             return SocketState.CLOSED;
         } else if (isAsync() || comet) {
+            // 异步servlet
             return SocketState.LONG;
         } else if (isUpgrade()) {
             return SocketState.UPGRADING;
@@ -1281,10 +1285,13 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             if (sendfileInProgress) {
                 return SocketState.SENDFILE;
             } else {
+                // openSocket为true，表示不要关闭socket
                 if (openSocket) {
+                    // readComplete表示本次读数据是否完成，比如nio中可能就没有读完数据，还需要从socket中读数据
                     if (readComplete) {
                         return SocketState.OPEN;
                     } else {
+                        // nio可能会走到这里
                         return SocketState.LONG;
                     }
                 } else {
@@ -1857,8 +1864,10 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         if (getErrorState().isError()) {
             return SocketState.CLOSED;
         } else if (isAsync()) {
+            // 如果状态还是异步的
             return SocketState.LONG;
         } else {
+            // 如果不是异步状态了
             if (!keepAlive) {
                 return SocketState.CLOSED;
             } else {
