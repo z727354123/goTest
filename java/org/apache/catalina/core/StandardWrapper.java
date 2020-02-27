@@ -595,6 +595,7 @@ public class StandardWrapper extends ContainerBase
      */
     @Override
     public boolean isUnavailable() {
+        // 方法false，表示Wrapper可用
 
         if (!isEnabled())
             return true;
@@ -852,12 +853,15 @@ public class StandardWrapper extends ContainerBase
 
                             // Note: We don't know if the Servlet implements
                             // SingleThreadModel until we have loaded it.
+                            // 一个Servlet只有被加载后才能知道是不是实现了SingleThreadModel接口
                             instance = loadServlet();
                             newInstance = true;
+                            // 如果没有继承singleThreadModel接口
                             if (!singleThreadModel) {
                                 // For non-STM, increment here to prevent a race
                                 // condition with unload. Bug 43683, test case
                                 // #3
+                                // 分配实例的次数+1
                                 countAllocated.incrementAndGet();
                             }
                         } catch (ServletException e) {
@@ -874,6 +878,7 @@ public class StandardWrapper extends ContainerBase
             }
 
             if (singleThreadModel) {
+                // 新生成了一个实例后，把实例放入instancePool
                 if (newInstance) {
                     // Have to do this outside of the sync above to prevent a
                     // possible deadlock
@@ -889,6 +894,7 @@ public class StandardWrapper extends ContainerBase
                 // For new instances, count will have been incremented at the
                 // time of creation
                 if (!newInstance) {
+                    // 分配实例的次数加1，如果是新创的实例，在上面就会加1
                     countAllocated.incrementAndGet();
                 }
                 return instance;
@@ -896,8 +902,12 @@ public class StandardWrapper extends ContainerBase
         }
 
         synchronized (instancePool) {
+            // countAllocated表示当前需要的实例数
+            // nInstances表示当前已经生成的实例数
+            // 如果需要的大于或等于存在的实例数，那么则要新生成了，如果已经超过了最大限制，就只能等其他线程释放servlet了
             while (countAllocated.get() >= nInstances) {
                 // Allocate a new instance if possible, or else wait
+                // 如果现在生成的实例小于最大限制，则继续生成
                 if (nInstances < maxInstances) {
                     try {
                         instancePool.push(loadServlet());
@@ -909,6 +919,7 @@ public class StandardWrapper extends ContainerBase
                         throw new ServletException(sm.getString("standardWrapper.allocate"), e);
                     }
                 } else {
+                    // 否则等等
                     try {
                         instancePool.wait();
                     } catch (InterruptedException e) {
@@ -919,6 +930,7 @@ public class StandardWrapper extends ContainerBase
             if (log.isTraceEnabled()) {
                 log.trace("  Returning allocated STM instance");
             }
+            // 分配次数+1，直接从instancePool取
             countAllocated.incrementAndGet();
             return instancePool.pop();
         }
@@ -939,12 +951,14 @@ public class StandardWrapper extends ContainerBase
 
         // If not SingleThreadModel, no action is required
         if (!singleThreadModel) {
+            // 分配次数-1
             countAllocated.decrementAndGet();
             return;
         }
 
         // Unlock and free this instance
         synchronized (instancePool) {
+            // 分配次数-1，
             countAllocated.decrementAndGet();
             instancePool.push(servlet);
             instancePool.notify();
@@ -1182,6 +1196,7 @@ public class StandardWrapper extends ContainerBase
 
             classLoadTime=(int) (System.currentTimeMillis() -t1);
 
+            // 实现了SingleThreadModel接口
             if (servlet instanceof SingleThreadModel) {
                 if (instancePool == null) {
                     instancePool = new Stack<Servlet>();
@@ -1189,6 +1204,7 @@ public class StandardWrapper extends ContainerBase
                 singleThreadModel = true;
             }
 
+            // 初始化servlet
             initServlet(servlet);
 
             fireContainerEvent("load", this);

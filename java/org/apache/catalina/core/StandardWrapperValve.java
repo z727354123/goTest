@@ -100,9 +100,9 @@ final class StandardWrapperValve
         // This should be a Request attribute...
         long t1=System.currentTimeMillis();
         requestCount.incrementAndGet();
-        StandardWrapper wrapper = (StandardWrapper) getContainer();
+        StandardWrapper wrapper = (StandardWrapper) getContainer(); // // 属于哪个Wrapper
         Servlet servlet = null;
-        Context context = (Context) wrapper.getParent();
+        Context context = (Context) wrapper.getParent();  // 属于哪个Context
 
         // Check for the application being marked unavailable
         if (!context.getState().isAvailable()) {
@@ -112,6 +112,7 @@ final class StandardWrapperValve
         }
 
         // Check for the servlet being marked unavailable
+        // 如果Context可用，但是Wrapper不可用, 在定义servlet时，可以设置enabled
         if (!unavailable && wrapper.isUnavailable()) {
             container.getLogger().info(sm.getString("standardWrapper.isUnavailable",
                     wrapper.getName()));

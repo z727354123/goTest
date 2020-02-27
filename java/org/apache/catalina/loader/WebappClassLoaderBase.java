@@ -1232,20 +1232,25 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             log.debug("modified()");
 
         // Checking for modified loaded resources
+        // 当前已经被加载了的class的路径
         int length = paths.length;
 
         // A rare race condition can occur in the updates of the two arrays
         // It's totally ok if the latest class added is not checked (it will
         // be checked the next time
+        // 当前已经被加载了的类对应的文件或jar的最近修改时间
         int length2 = lastModifiedDates.length;
         if (length > length2)
             length = length2;
 
+        // 遍历已经被加载了的
         for (int i = 0; i < length; i++) {
             try {
+                // 当前这个文件的最近修改时间
                 long lastModified =
                             ((ResourceAttributes) resources.getAttributes(paths[i]))
                                     .getLastModified();
+                    // 如果和之前的不相等
                     if (lastModified != lastModifiedDates[i]) {
                         if( log.isDebugEnabled() )
                             log.debug("  Resource '" + paths[i]
@@ -1255,11 +1260,13 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                         return (true);
                 }
             } catch (NamingException e) {
+                // 如果没有找到这个文件，则文件被删掉了
                 log.error("    Resource '" + paths[i] + "' is missing");
                 return (true);
             }
         }
 
+        // 当前应用的jar的个数
         length = jarNames.length;
 
         // Check if JARs have been added or removed
@@ -1267,6 +1274,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         if (getJarPath() != null) {
 
             try {
+                // 当前存在的jar包
                 NamingEnumeration<Binding> enumeration =
                     resources.listBindings(getJarPath());
                 int i = 0;
@@ -1289,6 +1297,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                         NameClassPair ncPair = enumeration.nextElement();
                         String name = ncPair.getName();
                         // Additional non-JAR files are allowed
+                        // 新增了jar包
                         if (name.endsWith(".jar")) {
                             // There was more JARs
                             log.info("    Additional JARs have been added");
@@ -3188,6 +3197,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 new PrivilegedFindResourceByName(name, path, true);
             entry = AccessController.doPrivileged(dp);
         } else {
+            // 寻找ResourceEntry
             entry = findResourceInternal(name, path, true);
         }
 
@@ -3333,10 +3343,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      */
     protected ResourceEntry findResourceInternal(final String name, final String path,
             final boolean manifestRequired) {
-        if (name.contains("LubanHttpServlet")) {
-            System.out.println(name);
-        }
-
         if (!started) {
             log.info(sm.getString("webappClassLoader.stopped", name));
             return null;
@@ -3347,7 +3353,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
         JarEntry jarEntry = null;
         // Need to skip the leading / to find resources in JARs
-        String jarEntryPath = path.substring(1);
+        String jarEntryPath = path.substring(1); //
 
         ResourceEntry entry = resourceEntries.get(path);
         if (entry != null) {
@@ -3363,6 +3369,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
                             if (jarEntry != null) {
                                 try {
+                                    // 当前这个类对应的jar中拥有哪些类
                                     entry.manifest = jarFiles[i].getManifest();
                                 } catch (IOException ioe) {
                                     // Ignore
@@ -3384,7 +3391,9 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
              isCacheable = path.startsWith(SERVICES_PREFIX);
         }
 
+        // jarFiles表示当前webapp下的web-inf/lib下的jar文件路径的数组
         int jarFilesLength = jarFiles.length;
+        // class文件仓库，默认就一个web-inf/classes
         int repositoriesLength = repositories.length;
 
         int i;
@@ -3405,6 +3414,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
                 // Note : Not getting an exception here means the resource was
                 // found
+                // 如果没有抛异常，就表示要加载的类存在
 
                 ResourceAttributes attributes =
                     (ResourceAttributes) resources.getAttributes(fullPath);
@@ -3421,6 +3431,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                     // packaged war)
                     entry = findResourceInternal(files[i], path);
                 }
+                // 当前这个文件的最近修改时间
                 entry.lastModified = attributes.getLastModified();
 
                 if (resource != null) {
@@ -3444,6 +3455,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
                         int j;
 
+                        // 将当前加载的类的最近一次修改时间添加到lastModifiedDates数组中
                         long[] result2 =
                             new long[lastModifiedDates.length + 1];
                         for (j = 0; j < lastModifiedDates.length; j++) {
@@ -3452,6 +3464,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                         result2[lastModifiedDates.length] = entry.lastModified;
                         lastModifiedDates = result2;
 
+                        // 将当前加载的类的路径添加到paths数组中
                         String[] result = new String[paths.length + 1];
                         for (j = 0; j < paths.length; j++) {
                             result[j] = paths[j];
@@ -3468,6 +3481,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             }
         }
 
+        // notFoundResources表示曾经在jar中找过这个类，但是没有找到
         if ((entry == null) && (notFoundResources.containsKey(name)))
             return null;
 
@@ -3477,8 +3491,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 if (!openJARs()) {
                     return null;
                 }
+                // 遍历jar包
                 for (i = 0; (entry == null) && (i < jarFilesLength); i++) {
 
+                    // 直接从jar中获取class对应的jarEntry
                     jarEntry = jarFiles[i].getJarEntry(jarEntryPath);
 
                     if (jarEntry != null) {
@@ -3569,6 +3585,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                     }
                 }
 
+                // 从jar中没有找到
                 if (entry == null) {
                     synchronized (notFoundResources) {
                         notFoundResources.put(name, name);

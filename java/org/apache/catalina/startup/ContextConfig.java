@@ -870,6 +870,7 @@ public class ContextConfig implements LifecycleListener {
         // 解析context.xml文件，注意，并不是<Context>节点，<Context>节点在解析Server.xml的时候就被解析了
         contextConfig(contextDigester);
 
+        // 创建解析web.xml文件的wDigester
         createWebXmlDigester(context.getXmlNamespaceAware(),
                 context.getXmlValidation());
     }
@@ -1297,6 +1298,7 @@ public class ContextConfig implements LifecycleListener {
         // Parse context level web.xml
         // 解析Context级别的web.xml
         InputSource contextWebXml = getContextWebXmlSource();
+        // 解析web.xml文件
         parseWebXml(contextWebXml, webXml, false);
 
         ServletContext sContext = context.getServletContext();

@@ -522,9 +522,11 @@ public class DefaultInstanceManager implements InstanceManager {
     }
 
     protected Class<?> loadClass(String className, ClassLoader classLoader) throws ClassNotFoundException {
+        // 如果是要加载org.apache.catalina这个包下的类，就只用containerClassLoader加载
         if (className.startsWith("org.apache.catalina")) {
             return containerClassLoader.loadClass(className);
         }
+        // 否则先用containerClassLoader加载，但是只能加载继承了ContainerServlet的servlet
         try {
             Class<?> clazz = containerClassLoader.loadClass(className);
             if (ContainerServlet.class.isAssignableFrom(clazz)) {
@@ -533,6 +535,8 @@ public class DefaultInstanceManager implements InstanceManager {
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
         }
+
+        // 调用当前webapp的自定义classloader加载
         return classLoader.loadClass(className);
     }
 

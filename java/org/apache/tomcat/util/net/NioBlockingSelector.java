@@ -240,7 +240,7 @@ public class NioBlockingSelector {
         }
 
         public void wakeup() {
-            if (wakeupCounter.addAndGet(1)==0) selector.wakeup();
+            if (wakeupCounter.addAndGet(1)==0) selector.wakeup(); // selector.select(20000)   selecto.iter
         }
 
         public void cancel(SelectionKey sk, KeyAttachment key, int ops){

@@ -145,6 +145,7 @@ public final class ApplicationFilterFactory {
         FilterMap filterMaps[] = context.findFilterMaps();
 
         // If there are no filter mappings, we are done
+        // 没有Filter映射关系
         if ((filterMaps == null) || (filterMaps.length == 0))
             return (filterChain);
 
@@ -152,6 +153,7 @@ public final class ApplicationFilterFactory {
         String servletName = wrapper.getName();
 
         // Add the relevant path-mapped filters to this filter chain
+        // 根据servletName找到匹配的filter
         for (int i = 0; i < filterMaps.length; i++) {
             if (!matchDispatcher(filterMaps[i] ,dispatcher)) {
                 continue;

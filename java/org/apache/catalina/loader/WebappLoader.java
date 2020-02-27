@@ -194,6 +194,8 @@ public class WebappLoader extends LifecycleMBeanBase
 
     /**
      * Repositories that are set in the loader, for JMX.
+     * 存了/WEB-INF/classes路径
+     * 存了/WEB-INF/lib目录下的所有jar包的路径
      */
     private ArrayList<String> loaderRepositories = null;
 
@@ -626,7 +628,7 @@ public class WebappLoader extends LifecycleMBeanBase
             }
 
             // Configure our repositories
-            setRepositories();  // 将DirContext下的/WEB-INF/classes和/WEB-INF/lib目录添加到WebappClassLoader的Repository中，以后将从Repository中寻找并加载类
+            setRepositories();  // 将/WEB-INF/classes和/WEB-INF/lib目录添加到WebappClassLoader的Repository中，以后将从Repository中寻找并加载类
             setClassPath(); // 设置当前加载器的classpath，应该是只有在jsp中用到
 
             setPermissions();

@@ -238,6 +238,7 @@ final class ApplicationFilterChain implements FilterChain, CometFilterChain {
                         ("doFilter", filter, classType, args, principal);
 
                 } else {
+                    // 执行filter的逻辑
                     filter.doFilter(request, response, this);
                 }
 
@@ -300,6 +301,7 @@ final class ApplicationFilterChain implements FilterChain, CometFilterChain {
                                                args,
                                                principal);
                 } else {
+                    // 执行servlet
                     servlet.service(request, response);
                 }
             } else {
@@ -526,16 +528,19 @@ final class ApplicationFilterChain implements FilterChain, CometFilterChain {
     void addFilter(ApplicationFilterConfig filterConfig) {
 
         // Prevent the same filter being added multiple times
+        // 排重
         for(ApplicationFilterConfig filter:filters)
             if(filter==filterConfig)
                 return;
 
+        // 扩容
         if (n == filters.length) {
             ApplicationFilterConfig[] newFilters =
                 new ApplicationFilterConfig[n + INCREMENT];
             System.arraycopy(filters, 0, newFilters, 0, n);
             filters = newFilters;
         }
+        // 添加到数组中
         filters[n++] = filterConfig;
 
     }
