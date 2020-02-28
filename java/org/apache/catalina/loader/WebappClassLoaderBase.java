@@ -1874,7 +1874,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
             // (0) Check our previously loaded local class cache
             // 先检查该类是否已经被Webapp类加载器加载。
-            clazz = findLoadedClass0(name); // map， clasloader.findLoadedClass0 native jvm
+            clazz = findLoadedClass0(name); // map
             if (clazz != null) {
                 if (log.isDebugEnabled())
                     log.debug("  Returning class from cache");
@@ -3197,7 +3197,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 new PrivilegedFindResourceByName(name, path, true);
             entry = AccessController.doPrivileged(dp);
         } else {
-            // 寻找ResourceEntry
+            // ---->ResourceEntry---->loadedClass
             entry = findResourceInternal(name, path, true);
         }
 
@@ -3393,7 +3393,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
         // jarFiles表示当前webapp下的web-inf/lib下的jar文件路径的数组
         int jarFilesLength = jarFiles.length;
-        // class文件仓库，默认就一个web-inf/classes
+        // class文件仓库，默认就一个"web-inf/classes"
         int repositoriesLength = repositories.length;
 
         int i;
@@ -3495,7 +3495,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 for (i = 0; (entry == null) && (i < jarFilesLength); i++) {
 
                     // 直接从jar中获取class对应的jarEntry
-                    jarEntry = jarFiles[i].getJarEntry(jarEntryPath);
+                    jarEntry = jarFiles[i].getJarEntry(jarEntryPath); //
 
                     if (jarEntry != null) {
 

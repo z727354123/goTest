@@ -77,7 +77,7 @@ public final class Bootstrap {
 
     private void initClassLoaders() {
         try {
-            // CommonClassLoader是一个公共的类加载器
+            // CommonClassLoader是一个公共的类加载器,默认加载${catalina.base}/lib,${catalina.base}/lib/*.jar,${catalina.home}/lib,${catalina.home}/lib/*.jar下的class
             commonLoader = createClassLoader("common", null); // 虽然这个地方parent是null，实际上是appclassloader
 //            System.out.println("commonLoader的父类加载器===="+commonLoader.getParent());
             if( commonLoader == null ) {

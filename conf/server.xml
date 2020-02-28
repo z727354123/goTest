@@ -141,12 +141,12 @@
         <Valve className="org.apache.catalina.authenticator.SingleSignOn" />
         -->
 
-<!--        <Context path="/HelloLuban" docBase="/Users/renyong/IdeaProjects/HelloServlet/target/HelloServlet"/>-->
+<!--        <Context path="/HelloLuban" relaodable="false" docBase="/Users/renyong/IdeaProjects/HelloServlet/target/HelloServlet"/>-->
 
 <!--        <Context path="/ServletDemoHello##1" docBase="D:\IdeaProjects\ServletDemo\target\classes" />-->
 <!--        <Context path="/ServletDemoHello##2" docBase="D:\IdeaProjects\ServletDemo\target\classes" />-->
 
-<!--        <Context path="/ServletDemo" docBase="C:\Users\周瑜\IdeaProjects\ServletDemo\target\ServletDemoServerXml" >-->
+<!--        <Context path="/ServletDemo"  docBase="C:\Users\周瑜\IdeaProjects\ServletDemo\target\ServletDemoServerXml" >-->
 <!--          <Resource-->
 <!--                  name="jdbc/myDB"-->
 <!--                  auth="Container"-->

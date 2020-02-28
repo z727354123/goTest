@@ -1280,7 +1280,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         setState(LifecycleState.STARTING);
 
         // Start our thread
-        // 每个容器Engine、Host、Context、Wrapper在启动时都会去启动线程
+        // Engine容器启动一个background线程
         threadStart();
     }
 
@@ -1683,7 +1683,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                             System.out.println(parent.getName() + "有loader");
                             cl = parent.getLoader().getClassLoader();
                         }
-                        // 处理容器的孩子节点
+                        // 执行子容器的background
                         processChildren(parent, cl);
                     }
                 }

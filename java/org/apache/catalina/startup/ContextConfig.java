@@ -911,7 +911,6 @@ public class ContextConfig implements LifecycleListener {
         // 根据web.xml文件对Context进行配置
         webConfig();
 
-        // 根据注解对Context进行配置
         if (!context.getIgnoreAnnotations()) {
             applicationAnnotationsConfig();
         }
