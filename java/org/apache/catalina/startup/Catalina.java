@@ -411,7 +411,7 @@ public class Catalina {
         // When the 'engine' is found, set the parentClassLoader.
         // 在解析Engine节点的时候，设置parentClassLoader为Catalina.class的类加载器, parentClassLoader为sharedClassLoader
         digester.addRule("Server/Service/Engine",
-                         new SetParentClassLoaderRule(parentClassLoader));
+                         new SetParentClassLoaderRule(parentClassLoader));  // shareClassLoader
         addClusterRuleSet(digester, "Server/Service/Engine/Cluster/");
 
         long t2=System.currentTimeMillis();
@@ -729,7 +729,7 @@ public class Catalina {
 
         // Start the new server
         try {
-            getServer().start();
+            getServer().start(); //
         } catch (LifecycleException e) {
             log.fatal(sm.getString("catalina.serverStartFail"), e);
             try {
@@ -763,7 +763,7 @@ public class Catalina {
         }
 
         // 是否需要阻塞，await标记是在通过Bootstrap类启动时设置为true的
-        if (await) {
+        if (await) {  // true
             await();  // 使用ServerSocket来监听shutdown命令来阻塞
             stop();  // 如果阻塞被解开，那么开始停止流程
         }

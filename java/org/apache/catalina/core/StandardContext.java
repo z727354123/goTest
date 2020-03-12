@@ -5639,7 +5639,7 @@ public class StandardContext extends ContainerBase
 
                 // Notify our interested LifecycleListeners
                 // 这里会发布一个CONFIGURE_START_EVENT事件，虽然是事件，但其实并不是异步，ContextConfig会接收到此事件
-                fireLifecycleEvent(Lifecycle.CONFIGURE_START_EVENT, null);
+                fireLifecycleEvent(Lifecycle.CONFIGURE_START_EVENT, null);  // web.xml
 
                 // Start our child containers, if not already started
                 // Context下是Wrapper，这些Wrapper是什么时候添加进Context中的？就是上面的CONFIGURE_START_EVENT事件触发的

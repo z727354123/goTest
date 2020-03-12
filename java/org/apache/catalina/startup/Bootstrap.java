@@ -421,7 +421,7 @@ public final class Bootstrap {
             // Don't set daemon until init() has completed
             Bootstrap bootstrap = new Bootstrap();
             try {
-                bootstrap.init();
+                bootstrap.init(); // catalinaaemon
             } catch (Throwable t) {
                 handleThrowable(t);
                 t.printStackTrace();
@@ -450,7 +450,7 @@ public final class Bootstrap {
                 daemon.stop();
             } else if (command.equals("start")) {
                 daemon.setAwait(true);  // 设置阻塞标志
-                daemon.load(args);      // 初始化Catalina
+                daemon.load(args);      // 解析server.xml,初始化Catalina
                 daemon.start();
                 if (null == daemon.getServer()) {
                     System.exit(1);

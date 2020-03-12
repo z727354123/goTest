@@ -416,7 +416,7 @@ public class CoyoteAdapter implements Adapter {
     public void service(org.apache.coyote.Request req, org.apache.coyote.Response res)
             throws Exception {
 
-        Request request = (Request) req.getNote(ADAPTER_NOTES);
+        Request request = (Request) req.getNote(ADAPTER_NOTES); // Request-->Request
         Response response = (Response) res.getNote(ADAPTER_NOTES);
 
         if (request == null) {
@@ -793,6 +793,7 @@ public class CoyoteAdapter implements Adapter {
 
         while (mapRequired) {
             // This will map the the latest version by default
+            // 根据serverName和uri来设置mappingData
             connector.getMapper().map(serverName, decodedURI,
                     version, request.getMappingData());
             request.setContext((Context) request.getMappingData().context);
@@ -863,6 +864,7 @@ public class CoyoteAdapter implements Adapter {
                         Context ctxt = (Context) contexts[i - 1];
                         if (ctxt.getManager().findSession(sessionID) != null) {
                             // We found a context. Is it the one that has
+
                             // already been mapped?
                             if (!ctxt.equals(request.getMappingData().context)) {
                                 // Set version so second time through mapping

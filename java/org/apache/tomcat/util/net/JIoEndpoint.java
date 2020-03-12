@@ -216,7 +216,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                     //达到了最大连接数限制则等待
                     countUpOrAwaitConnection();
 
-                    Socket socket = null;
+                    Socket socket = null;  // bio，nio
                     try {
                         // Accept the next incoming connection from the server
                         // bio socket
@@ -551,6 +551,8 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
             if (!running) {
                 return false;
             }
+            // bio， 一个socket连接对应一个线程
+            // 一个http请求对应一个线程？
             getExecutor().execute(new SocketProcessor(wrapper));
         } catch (RejectedExecutionException x) {
             log.warn("Socket processing request was rejected for:"+socket,x);

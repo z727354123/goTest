@@ -1491,7 +1491,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         }
 
         // 热加载
-        Loader loader = getLoaderInternal();
+        Loader loader = getLoaderInternal();  // Context.webapploader
         if (loader != null) {
             try {
                 loader.backgroundProcess();
@@ -1499,6 +1499,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                 log.warn(sm.getString("containerBase.backgroundProcess.loader", loader), e);
             }
         }
+        // 处理session
         Manager manager = getManagerInternal();
         if (manager != null) {
             try {
@@ -1716,7 +1717,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             Container[] children = container.findChildren();
             for (int i = 0; i < children.length; i++) {
                 if (children[i].getBackgroundProcessorDelay() <= 0) {
-                    // 递归启动容器的backgroundProcess
+                    // 调用子容器的backgroundProcess方法， delay小于0才调用，如果大于0，则该容器会有自己单独的background线程
                     processChildren(children[i], cl);
                 }
             }

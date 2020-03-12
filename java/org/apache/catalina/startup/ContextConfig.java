@@ -1344,6 +1344,7 @@ public class ContextConfig implements LifecycleListener {
 
             // Step 9. Apply merged web.xml to Context
             if (ok) {
+                //
                 webXml.configureContext(context);
             }
         } else {

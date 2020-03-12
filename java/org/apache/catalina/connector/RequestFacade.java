@@ -279,7 +279,7 @@ public class RequestFacade implements HttpServletRequest {
 
         if (request == null) {
             throw new IllegalStateException(
-                            sm.getString("requestFacade.nullRequest"));
+                    sm.getString("requestFacade.nullRequest"));
         }
 
         return request.getAttribute(name);
