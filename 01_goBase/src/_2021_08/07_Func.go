@@ -1,4 +1,4 @@
-package _2021_08
+package main
 
 import "fmt"
 
@@ -22,7 +22,7 @@ func main() {
 	fmt.Println(intNum)
 }
 
-func _07_returnFuncOne(num int, num2 int) (int) {
+func _07_returnFuncOne(num int, num2 int) int {
 	fmt.Println("-------------------华丽分割线----------------------")
 	fmt.Println(num, &num)
 	return num + num2

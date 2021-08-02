@@ -1,4 +1,4 @@
-package _2021_08
+package main
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ func main() {
 	const const3, const4 = 1, 2
 	const const7, const8 = 1, "2"
 	const (
-		const9 = 1
+		const9         = 1
 		const10 string = "1"
 	)
 	const const5, const6 int = 1, 2

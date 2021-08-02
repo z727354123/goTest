@@ -1,4 +1,4 @@
-package _2021_08
+package main
 
 import (
 	"bufio"
