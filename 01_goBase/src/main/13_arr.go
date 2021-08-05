@@ -110,4 +110,24 @@ func main() {
 		}
 	}
 
+	fmt.Println("-------------------切片----------------------")
+	if true {
+		var arr1 []int = []int{0, 1, 2, 3, 4, 5}
+		var arr2 []int
+
+		fmt.Println(arr1, len(arr1), cap(arr1))
+		fmt.Println(arr2, len(arr2), cap(arr2))
+
+		arr2 = arr1[3:4:5]
+
+		fmt.Println("arr1[:3]", arr2, len(arr2), cap(arr2))
+		arr3 := append(arr2, 99)
+		fmt.Println("arr2", arr2, len(arr2), cap(arr2))
+		fmt.Println("arr3", arr3, len(arr3), cap(arr3))
+		arr3[0] = 7
+		fmt.Println("arr2", arr2, len(arr2), cap(arr2))
+		fmt.Println("arr3", arr3, len(arr3), cap(arr3))
+		fmt.Println(&arr2 == &arr3)
+	}
+
 }
