@@ -1,8 +1,13 @@
 package main
 
 import (
+	"crypto/md5"
 	"date"
+	"encoding/hex"
 	"fmt"
+	"hash"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -23,4 +28,19 @@ func main() {
 	fmt.Println(event.Date.DJ())
 	fmt.Println(event.DJ())
 
+	fmt.Println(time.Now().UnixNano() / 1e6)
+
+	// 最终需要 方式 1
+	var bytes16 [16]byte = md5.Sum([]byte("lisi"))
+	str := hex.EncodeToString(bytes16[:])
+	fmt.Println(strings.ToUpper(str))
+	// 最终需要 方式 1-2
+	str = fmt.Sprintf("%x", bytes16)
+	fmt.Println(strings.ToUpper(str))
+	// 最终需要 方式 2
+	var hash1 hash.Hash = md5.New()
+	hash1.Write([]byte("lisi"))
+	var bytes []byte = hash1.Sum(nil)
+	str = hex.EncodeToString(bytes)
+	fmt.Println(strings.ToUpper(str))
 }
