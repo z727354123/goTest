@@ -2,33 +2,33 @@ package main
 
 import "fmt"
 
-type TreeNode struct {
+type TreeNodeMy struct {
 	Val   int
-	Left  *TreeNode
-	Right *TreeNode
+	Left  *TreeNodeMy
+	Right *TreeNodeMy
 }
 
 func main() {
-	node := TreeNode{
+	node := TreeNodeMy{
 		Val: 1,
-		Right: &(TreeNode{
+		Right: &(TreeNodeMy{
 			Val: 2,
-			Left: &(TreeNode{
+			Left: &(TreeNodeMy{
 				Val: 3,
 			}),
 		}),
 	}
-	traversal := preorderTraversal(&node)
+	traversal := preorderTraversal2(&node)
 	fmt.Println(traversal)
 }
 
-func preorderTraversal(root *TreeNode) []int {
+func preorderTraversal2(root *TreeNodeMy) []int {
 	if root == nil {
 		return nil
 	}
 	length := 0
-	myMap := make(map[int]*TreeNode)
-	res := make([]int, 1)
+	myMap := make(map[int]*TreeNodeMy)
+	res := make([]int, 0)
 	for true {
 		if root == nil && length <= 0 {
 			return res
