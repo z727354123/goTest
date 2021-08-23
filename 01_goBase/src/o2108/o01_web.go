@@ -11,7 +11,7 @@ import (
 
 func main() {
 	http.HandleFunc("/hello", viewHandler)
-	http.HandleFunc("/*", viewHandler)
+	http.HandleFunc("/", viewHandler)
 	err := http.ListenAndServe(":8181", nil)
 	if err != nil {
 		log.Fatal(err)
