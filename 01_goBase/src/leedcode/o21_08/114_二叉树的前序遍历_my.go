@@ -9,17 +9,8 @@ type TreeNodeMy struct {
 }
 
 func main() {
-	node := TreeNodeMy{
-		Val: 1,
-		Right: &(TreeNodeMy{
-			Val: 2,
-			Left: &(TreeNodeMy{
-				Val: 3,
-			}),
-		}),
-	}
-	traversal := preorderTraversal2(&node)
-	fmt.Println(traversal)
+
+	fmt.Println((-1 >> 1))
 }
 
 func preorderTraversal2(root *TreeNodeMy) []int {
