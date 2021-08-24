@@ -1,0 +1,16 @@
+{{define "header"}}
+<input type="text">
+<h2>header</h2>
+<h3>{{.}}</h3>
+<h3>{{.Name}}</h3>
+<h3>{{"Name"}}</h3>
+<input type="submit">
+{{end}}
+
+<body>
+
+
+{{template "header" .}}
+{{template "header"}}
+</body>
+<h4>heder over</h4>
