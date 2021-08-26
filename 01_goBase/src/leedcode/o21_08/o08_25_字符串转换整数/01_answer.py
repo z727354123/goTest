@@ -47,20 +47,19 @@ class Automaton:
 					self.ans = INT_MAX
 					return True
 		return False
+	def get_ans(self) -> int:
+		return self.ans * self.sign
 
-		def get_ans(self) -> int:
-			return self.ans * self.sign
-
-		def updateStatus(self, char: str):
-			if char.isspace():
-				status = Status.START
-			elif char == '+' or char == '-':
-				status = Status.START
-			elif char.isdigit():
-				status = Status.START
-			else:
-				status = Status.END
-			self.status = self.table[self.status][status]
+	def updateStatus(self, char: str):
+		if char.isspace():
+			status = Status.START
+		elif char == '+' or char == '-':
+			status = Status.START
+		elif char.isdigit():
+			status = Status.START
+		else:
+			status = Status.END
+		self.status = self.table[self.status][status]
 
 
 class Solution:
