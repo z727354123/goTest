@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 //import "strconv"
 
@@ -37,8 +40,33 @@ num 仅由若干位数字（0 - 9）组成
 著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
 */
 func main() {
-	resStr := "10001"
-	fmt.Println(removeKdigits_my(resStr, 1))
+	//resStr := "10001"
+	fmt.Println(strings.TrimPrefix("0000123", "0"))
+	fmt.Println(strings.TrimLeft("0000123", "10"))
+	runes := []rune{'0', '1', '0', '1', '1', '0', '1', '1', '0', '1', '1', '0', '1', '1', '0', '1'}
+	fmt.Println(string(runes))
+	//fmt.Println(removeKdigits_my(resStr, 1))
+}
+func removeKdigits_ans(num string, k int) string {
+	// 装载栈
+	stack := []byte{}
+	for _, itemRune := range num {
+		// 有比他大的就移除
+		itemByte := byte(itemRune)
+		for k > 0 && len(stack) > 0 && stack[len(stack)-1] > itemByte {
+			// 移除
+			stack = stack[:len(stack)-1]
+			k--
+		}
+		// 添加入栈
+		stack = append(stack, itemByte)
+	}
+	stack = stack[:len(stack)-k]
+	resStr := strings.TrimLeft(string(stack), "0")
+	if resStr == "" {
+		return "0"
+	}
+	return resStr
 }
 func removeKdigits_my(num string, k int) string {
 	if k == 0 {
