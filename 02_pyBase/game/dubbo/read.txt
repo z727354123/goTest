@@ -1,0 +1,66 @@
+dubbo负载
+    基本逻辑
+        AbstractLoadBalance通用类
+            获取权重 getWeight
+                判断 服务预热时间
+                    默认10min
+        RandomLoadBalance 加权随机
+            加权随机算法
+                ThreadLocalRandom获取随机数
+        LeastActiveLoadBalance 最小活跃
+            取最小活跃
+                AtomicInteger存连接数
+            多个最小活跃
+                加权随机算法
+        RoundRobinLoadBalance 加权轮询
+            nginx平滑加权轮询
+                ConcurrentMap
+                    代替数组
+                AtomicLong
+                    用于并发计算
+        ConsistentHashLoadBalance 一致性哈希算法
+            +虚拟节点
+            计算过程
+                地址 + 0 ~ 39
+                    md5 后分 4截
+                    每节 0 ~ 2^32 -1
+                    共 40 * 4 =160 个节点
+                请求参数 md5, 取第一截
+                    使用该节点用 TreeMap 获取服务
+        ShortestResponseLoadBalance 最小活跃响应时间
+            30s重置
+            值 = 最小响应时间 * (活跃数 + 1)
+    2.7文档与3.0代码对比
+        AbstractLoadBalance通用类
+            获取权重 getWeight
+                多了注册服务 不需要判断时长
+        RandomLoadBalance 加权随机
+            随机数获取优化
+                Random
+                    并发可能不准
+                ThreadLocalRandom
+            减少getWeight次数
+        LeastActiveLoadBalance 最小活跃
+            加权随机相关
+                随机数获取优化
+                减少getWeight次数
+        RoundRobinLoadBalance 加权轮询
+            v2.6.4 
+                数组取模
+                    性能问题
+                        O(mod)
+                    平滑问题
+                        分布过于集中
+            v2.6.5
+                nginx平滑加权轮询
+        ConsistentHashLoadBalance 一致性哈希算法
+            服务过载 >= 1.5 时优化
+        新增 ShortestResponseLoadBalance 
+    总结
+        有明显权重比例
+            RandomLoadBalance 加权随机
+            RoundRobinLoadBalance 加权轮询
+        等权重,有二级缓存
+            ConsistentHashLoadBalance 一致性哈希算法
+        简单负载
+            都可用

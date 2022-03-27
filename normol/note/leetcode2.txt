@@ -1,0 +1,141 @@
+leetcode分析2
+    股票买卖
+        介绍
+            场景
+                买卖股票 收益最大化
+        基本架构
+            dp 动态规划架构
+                for 循环 
+                    i 天数, 交易k次, 0|1 是否 持有股票
+                    i == 0
+                        边界条件处理
+                    dp[i][k][0|1] = max(dpxx, dp  +- prices[a] )
+                return dp[i][k-1][0]
+                    最大利益
+        题目
+            交易1次 或 无数次
+                1次
+                    可以优化 k
+                    再优化 dp 数组至 临时变量
+                n次
+                    可以优化 k
+                    再优化 dp 数组至 临时变量
+            交易 k(指定数字) k>1 次
+                可以优化 dp数组, 至 2k 个定时变量
+                dp数组只依赖 上面一环, 对应就可以 优化至 局部变量
+            交易 k(参数) 次
+                dp[i][k][0|1]
+                可优化成两个 dp 数组
+                    sell [i][k]
+                    buy [i][k]
+                数据越界问题, k + 1 优化
+                    dp [i][k + 1]
+            无数次 但是有冷冻期1天
+                无数次
+                    k 可以优化
+                冷冻期一天
+                    持有股票状态 变多,
+                    具体内容
+                        0, 未持有, 未冻结
+                        1, 未持有, 冻结
+                        2, 持有
+            无数次, 但是有手续费
+                扣除即可
+                    卖股票的时候 - fee
+    单调栈 Monotonic Stack
+        介绍
+            场景
+                给定 数组 [1, 2, 3, 4...]
+                求
+                    比当前元素下一个大的元素, 没有就 -1
+                        [2, 3, 4, -1, ....]
+                    比当前元素下一个大的元素,的间隔数,没有就 0
+                        [1, 1, 1, 0....]
+                给定数组 换成 环形
+        普通框架
+            定义结果数组 int[] res
+            从末尾往前遍历数组
+                当前元素值
+                    int val = arr[i]
+                stack 出栈, 至空, 或元素 比 val 大
+                记录结果
+                    res[i] = stack.top() || -1
+                        间隔数需要 stack.pop() - i
+                stack 入栈
+                    求 元素, 入 val
+                    求 间隔数, 入 i (index)
+        环形框架
+            获取数组长度 len = arr.length
+            从末尾往前遍历数组
+                假装数组 = 原来2倍
+                    开始i的值做了修改
+                        i = len * 2 - 1
+                arr[i] 中 i 替换 成 i % len
+    打劫家舍
+        介绍
+            场景
+                一个 数组, 元素代表钱, 相邻不能偷
+                进阶
+                    环形数组
+                求最值
+                    偷钱最大
+        基本架构
+            dp数组
+                i代表 偷到该位置, 1 0 表示偷 与不偷
+                dp[i][0|1]
+                0 | 1 可以优化, 只关注, dp[i], i代表到该位置的最大值
+                    dp[i] = Max( dp[i-2] + val, dp[i-1])
+        环形数组问题
+            len == 1, return arr[0]
+            拆分成两个闭区间计算
+                区间 [0, len - 2]
+                区间 [1, len - 1]
+                两个 取 Max 即可
+        数据结构变成树
+            简单版本
+                递归 + 备忘录 解法
+            巧妙版本
+                递归函数
+                    返回 int[2]
+                    返回 抢 或 不抢, 减少了 重叠子问题的 重复调用
+    nSum问题
+        介绍
+            场景
+                给定数组, n 个数字之和 = target, 并且 数字组合不能重复
+            基本思路
+                n > 3时
+                    数字不重复右移
+                n = 2时,
+                    数字不重复, 双指针求和
+        基本架构
+            总体对 int[] arr 排序
+                方便后续计算
+            递归函数
+                定义返回结果 List
+                2数之和
+                    定义双指针
+                        left = start, right = len - 1
+                    循环 left < right
+                        求和
+                            sum = arr[left] + arr[right]
+                        比较 tar
+                            sum = tar
+                                添加进 List
+                                left ++, right --, 至不重复
+                            sum < tar
+                                left ++
+                                直到 arr[left] != leftVal
+                            sum > tar
+                                right --
+                                直到 arr[right] != rightVal
+                n数之和 n>2
+                    定义循环 start < len
+                        取值
+                            int val = arr[start]
+                        调用递归 (arr, start = start + 1, tar = tar - val, n = n -1)
+                        递归返回 tmpList
+                        遍历 tmpList
+                            item.add(val)
+                            List.add(item)
+                        start++, 直到 arr[start] != val
+                返回 List

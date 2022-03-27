@@ -1,0 +1,90 @@
+mysql索引失效
+    准备工作
+        创建表
+            字段
+                `id` int NOT NULL AUTO_INCREMENT,
+                  `code` varchar(20) COLLATE utf8mb4_bin DEFAULT NULL,
+                  `age` int DEFAULT '0',
+                  `name` varchar(30) COLLATE utf8mb4_bin DEFAULT NULL,
+                  `height` int DEFAULT '0',
+                  `address` varchar(30) COLLATE utf8mb4_bin DEFAULT NULL,
+            索引
+                PRIMARY KEY (`id`),
+                  KEY `idx_code_age_name` (`code`,`age`,`name`),
+                  KEY `idx_height` (`height`)
+            oth
+                ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+        数据库版本
+            select version();
+            8.0.19
+    场景
+        复合索引 非最左匹配 且 非覆盖索引
+            不满足最左匹配原则
+                复合索引
+                失效条件
+                    最左没有匹配
+                    select 复合索引其他字段
+            使用了select *
+                跟不满足 最左匹配原则 类型
+                失效条件
+                    最左没有匹配
+                    select 复合索引其他字段
+                例子
+                    索引 code / age / name
+                    select * from user where name = '周星驰'
+                        不走索引
+                    select code, age from user where name = '周星驰'
+                        走 type = index 索引, 比ALL 高效
+                走索引时
+                    用到的是 覆盖索引
+                        只扫描索引树
+        索引列上 有计算/函数
+            索引列上 有计算
+                失效例子
+                    explain select * from user where id+1=2;
+                无关例子
+                    explain select * from user where id=2-1;
+            索引列 用了函数
+                跟列上有计算类似, 只不过用函数
+                失效例子
+                    explain select * from user  where SUBSTR(height,1,2)=17;
+        varchar 索引
+            字段类型不同
+                失效例子
+                    例子1
+                        索引 varchar类型
+                        搜索 int类型
+                        搜索时, 两边转成浮点数
+                无关例子
+                    例子1
+                        索引 int 类型
+                        搜索 varchar 类型
+                        搜索时, varchar 优化成 int
+            like 左边有 %
+                索引结构有关
+        列对比
+            失效例子
+                explain select * from user where id=height
+                单独索引没用
+            无关例子
+                使用 覆盖索引 就行
+        使用or 关键字
+            or 字段 没有索引 或 非第一个索引
+        not in 和 not exists
+            可能跟实际数据量有关
+        order by 的坑
+            不满足最左匹配
+                失效
+                    explain select * from user where code='101' order by name;
+                    Extra = Using filesort
+                    要走一次filesort排序
+                有效
+                    explain select * from user where code='101' order by age;
+                    无 filesort 排序, 索引 code / age / name
+            只 order by 索引, 没有 limit
+            复合索引不同排序方式
+                失效
+                    code asc, age desc
+                有效
+                    code asc, age asc
+                    code desc, age desc

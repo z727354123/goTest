@@ -1,0 +1,82 @@
+leetcode分析3
+    最优子结构
+        介绍
+            求最值的问题大部分都具有这个性质
+                非动态规划特有
+            大致就是 不同解法思路
+            最优子结构性质作为动态规划问题的必要条件，一定是让你求最值的
+        4键盘问题
+            简单dp
+                n 代表操作次数, a_num 代表输入 A次数, copy 代表copy 次数
+                dp[n][a_num][copy]
+            优化思路
+                a_num 操作 / copy 操作 最优条件是 上次/上x次 的最大值
+                可以优化为 dp[n]
+                其余操作使用 for循环 来代替
+                代码
+                    A操作 dp[i] = [i-1] + 1
+                    copy操作
+                        for循环 j=2 j<i, j++
+                        dp[i] = max( dp[i], dp[j-2] * (i - j + 1) )
+        扔鸡蛋问题
+            简单递归
+                stack Overflow
+                    -Xss2m
+                dp递归函数
+                    k 剩余鸡蛋, n 剩余楼层数量
+                    k == 1
+                        return n
+                            直接线性扫描
+                    n == 0
+                        return 0
+                            0楼直接结果
+                    定义返回结果 res
+                    for i = 1, i <= n 遍历
+                        res = min()
+                            res
+                            1 + max()
+                                dp(k - 1, i - 1)
+                                    鸡蛋碎了, 往 [1, i-1] 找
+                                        也就是剩 i - 1 层
+                                dp(k, n - i)
+                                    鸡蛋没碎, 往[i+1, n]找
+                                        也就是剩 n - i 层
+                    return res
+            优化
+                优化 for 遍历
+                    碎, 没碎曲线(横坐标i),是 X , 碎是 /, 没碎是 \ 
+                    可以用二分法查找 while left <= right
+                        变量定义
+                            mid = (left + right) >> 1
+                            没碎 = dp(k, n - mid)
+                            碎 = dp(k - 1, mid - 1)
+                        二分调整
+                            没碎 > 碎, left = mid + 1
+                                记录结果 没碎 + 1
+                            没碎 <= 碎, right = mid - 1
+                                记录 碎+1
+                        每次都记录结果
+                            res = min(res, 没碎|碎 + 1)
+                转为dp数组
+                    dp[k][m] = max Level
+                    k 是可用鸡蛋, m 是最大尝试次数
+                    遍历到 dp[k][m] >= N 即可
+                    状态转移方程式
+                        dp[k][m] = dp[k-1][m-1] + 1 + dp[k][m-1]
+    dp数组的遍历方向
+        介绍
+            dp 数组遍历 for 循环 开始结束
+        方向
+            正向遍历
+                for i=0 i<m i++
+                    for j=0 j<n j++
+                        dp[i][j]
+            反向遍历
+                for i=m-1 i>=0 i--
+                    for j=n-1 j>=0 j--
+                        dp[i][j]
+            斜向遍历
+                for x=0 x<=n x++
+                    for i=0 i<= n-x i++
+                        int j = x + i - 1
+                        dp[i][j]

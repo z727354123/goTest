@@ -1,0 +1,230 @@
+explain解析
+    explain解析
+        id
+            查询序列号
+                越大 越先执行
+                相等 在上的先执行
+        select_type
+            查询类型
+                SIMPLE
+                    简单查询
+                        不包括
+                            子查询
+                            union查询
+                PRIMARY
+                    主查询
+                        子查询相关
+                            存在子查询时, 在外层是 主查询
+                            5.6后, in 查询会优化成 join 查询, 变成 primary 查询,
+                                 extended + show warning; 可以看出
+                        衍生查询相关
+                            存在衍生查询, 外层是衍 主查询
+                            主查询 table = <derived4>
+                SUBQUERY
+                    子查询
+                        where xid = (select xid from tb)
+                UNION
+                    联合查询
+                        查询在 关键字 union 之后
+                        特点
+                            id 大于 union 之前的 查询
+                UNION RESULT
+                    联合查询结果
+                        union 合并后的结果
+                        table = <union2,3>
+                DERIVED
+                    衍生查询
+                        from 的table 是 另外的 select 出来的语句 
+                        from (select * from xxx where xxx)
+        table
+            正在访问的表
+        partitions
+            匹配的分区
+                分区表
+                    命中的分区情况
+                    建表语句就确定分区
+        type
+            访问类型
+                NULL
+                    优化阶段能获取的数据
+                        不用再 访问表 或 索引
+                    常见
+                        计算获取
+                            EXPLAIN SELECT 5*7;
+                        叶子节点直接拿
+                            EXPLAIN SELECT MAX(id) FROM student;
+                system
+                    表只有一行 = 系统表
+                    例子
+                        proxies_priv表
+                            EXPLAIN SELECT * FROM `mysql`.`proxies_priv`
+                        Mysql服务启动时候已经加载在内存中，不需要进行磁盘IO
+                const
+                    最多只能匹配到一条符合条件的记录
+                    主键/唯一索引/联合唯一索引 =等值查询
+                    常见
+                        id主键
+                            EXPLAIN SELECT * FROM student  WHERE id = 10;
+                        唯一索引
+                            EXPLAIN SELECT * FROM student  WHERE name = '乾隆';
+                            如果 name 不是唯一索引, type = ref
+                        联合唯一索引
+                            EXPLAIN SELECT * FROM student  WHERE name = '乾隆' and age = 17;
+                            非唯一索引, ref
+                eq_ref
+                    多表join, 对于主表每一行, 被join(无left就不区分)表 只能找到一行与其匹配
+                    也就是 被join 表的 on 关联查询是 用到唯一索引/主键
+                    例子
+                        left join
+                            学生表 + 学生课程多对多表
+                            语句
+                                EXPLAIN SELECT * 
+                                FROM stu_course sc
+                                left JOIN student s ON  s.id = sc.cid;
+                            结果
+                                sc 表 type = ALL, sc 有联合索引 = index
+                                s 表 type = eq_ref
+                                    s表的 id 为普通索引时 = ref
+                ref
+                    索引访问/索引查找
+                    驱动表 的一条记录, 被驱动表 能找到多条记录, 被驱动表 查询条件使用到 非唯一索引
+                    被驱动表 使用 非唯一索引
+                    例子
+                        left join
+                            学生表 + 学生课程多对多表
+                            语句
+                                关联查询
+                                    EXPLAIN SELECT * 
+                                    FROM student s
+                                    left JOIN stu_course sc ON s.id = sc.sid;
+                                普通查询
+                                    EXPLAIN SELECT * FROM student WHERE name = '乾隆';
+                            结果
+                                关联查询
+                                    s表 index
+                                    sc表 ref
+                                        sid 是 组合唯一索引的 非唯一性前缀
+                                普通查询
+                                    name是非唯一索引, ref
+                fulltext
+                    命中全文索引
+                ref_or_null
+                    与ref 类似, 但是 还加了 or Null, 必须对包含 NULL值/非Null值 的行就行额外搜索。
+                    例子
+                        语句
+                            无or
+                                EXPLAIN SELECT * FROM student WHERE name is null;
+                            有or
+                                EXPLAIN SELECT * FROM student WHERE name = '乾隆' or name is null;
+                        结果
+                            无or
+                                ref
+                            有or
+                                ref_or_null
+                index_merge
+                    索引合并优化
+                    单表中多个索引的交集，并集以及交集之间的并集，但不包括跨多张表和全文索引。
+                    例子
+                        语句
+                            EXPLAIN SELECT * FROM student WHERE name in ('乾隆', '关羽');
+                            EXPLAIN SELECT * FROM student WHERE id < 10;
+                            EXPLAIN SELECT * FROM student WHERE name in ('乾隆', '关羽') or id < 10;
+                        结果
+                            range
+                            range
+                            index_merge
+                                存疑: 故 index_merge 速度并不一定比 range高
+                                但是可能就用的索引多
+                unique_subquery
+                    索引查找函数
+                        完全替换子查询，提高查询效率。
+                    子查询 查询结果是唯一索引
+                    形式
+                        value IN (SELECT unique_key FROM table WHERE some_expr)
+                    例子
+                        语句
+                            explain select * from student where id in (select id from course);
+                            explain update student set age = 18 where id in (select id from course);
+                        结果
+                            stu index, course eq_ref
+                                被转换成 join 查询
+                            stu index, course unique_subquery
+                                子主题
+                index_subquery
+                    与 unique_subqery 类似, 不过唯一索引 换成 非唯一索引
+                range
+                    索引范围扫描
+                    形式
+                        id = 2 or id = 4 or id = 5
+                        id in (2, 4, 5)
+                        id < 10
+                        id < 10 and/or id > 20
+                        name like '李%'
+                index
+                    遍历索引树, 相对比 ALL 快, 但是要扫描全部索引
+                    形式
+                        order by key
+                        count(1) no where
+                        select name, count(1) from student group by name;
+                        select key not where
+                ALL
+                    全表
+        possible_keys
+            可能使用的 索引
+            会有多个
+        key
+            实际使用的 索引
+        key_len
+            索引的 字节数
+        ref
+            与索引 对比的 列
+            那些列被使用了
+                const
+                    常量
+                其他表.列名
+                    join on 条件
+                func
+                    表明type 是一个函数
+        rows
+            必须检查的用来返回请求数据的行数
+        filtered
+            显示了通过条件过滤出的行数的百分比估计值。
+        Extra
+            额外信息
+            简单例子
+                Distinct
+                    发现第1个匹配行后,停止为当前的行组合搜索更多的行。
+                Not exists
+                    对查询进行LEFT JOIN优化,发现1个匹配LEFT JOIN标准的行后,
+                    不再为前面的的行组合在该表内检查更多的行。
+                range checked for each record (index map: #)
+                    没有发现好的可以使用的索引,但发现如果来自前面的表的列值已知
+                    ,可能部分索引可以使用。
+                Using filesort
+                    需要额外的一次传递,以找出如何按排序顺序检索行。
+                    例子
+                        explain select * from t_order order by express_type;
+                        在有排序子句的情况下很常见的一种情况。
+                        此时mysql会根据联接类型浏览所有符合条件的记录，
+                        并保存排序关键字和行指针，然后排序关键字并按顺序检索行。
+                Using index
+                    只使用索引树中的信息
+                    不需要进一步搜索读取实际的行
+                Using temporary
+                    创建一个临时表来容纳结果
+                    例子
+                        union 的结果
+                            select_type
+                                union result
+                            table
+                                <union id, id>
+                            type
+                                ALL
+                Using where
+                    WHERE 子句用于限制哪一个行匹配下一个表或发送到客户。
+                Using sort_union(...), Using union(...), Using intersect(...)
+                    这些函数说明如何为index_merge联接类型合并索引扫描。
+                Using index for group-by
+                    似于访问表的Using index方式,表示MySQL发现了一个索引,
+                    可以用来查 询GROUP BY或DISTINCT查询的所有列,
+                    而不要额外搜索硬盘访问实际的表。

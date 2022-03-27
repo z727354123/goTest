@@ -1,0 +1,67 @@
+git操作
+    修改跟踪
+        set up to track remote branch
+        查看当前 本地 对应远程分支
+            git branch -vv
+        修改
+            git branch --set-upstream-to=myOrigin/dev local_dev
+            git branch --set-upstream-to=origin/dev dev_origin --allow-unrelated-historiesdev
+            git branch --set-upstream-to=origin/dev
+            git branch --set-upstream-to=origin/dev_hlcrs
+            git branch --set-upstream-to=origin/dev_reentry
+            git branch --set-upstream-to=origin/dev_feature4
+            git branch --set-upstream-to=origin/bugfix_0831
+            git branch --set-upstream-to=origin/dev_feature1203_xwx987967
+            git branch --set-upstream-to=origin/dev_feature1203
+            git branch --set-upstream-to=dev_hlcrs/dev
+            git branch --set-upstream-to=origin/dev_refactor
+            git branch --set-upstream-to=origin/test_meta
+    idea 感叹号问题
+        git rebase --abort
+    硬链接
+        子主题
+            mklink /J link_name target_name
+            H 硬, J 目录 但是还是 超链接
+            H 硬, 只能文件
+    java打印堆栈
+        jps -l
+            获取当前java 进程的 PID
+        jstack -l PID
+            打印PID 的堆栈信息
+    md5
+        certutil -hashfile filename MD5
+    问题
+        设计
+            只要是调用第三方接口的, 就要考虑失败
+                措施
+                    直接操作失败, 保持原来状态, 类似回滚
+                    加标记, 可以重试
+                原因
+                    失败了没有任何标记提示, 或者重试,导致数据变成脏数据
+    反编译
+        jad -o -r -sjava -d src class/**/*.class
+        当前目录 class 里面是 class
+            src 新建后成 java文件
+        测试
+            jad -o -r -sjava -d src java/*.class
+    显示该目录tree
+        tree
+            只显示目录
+        tree /f
+            显示文件
+        tree /f > 123.txt
+            输出到文件
+    查看文件数,行数
+        统计hr目录下，java文件数量：
+            find ./hr/ -name "*.java" |wc -l
+        2.统计hr目录下所有java文件代码行数：
+            find ./hr/ -name "*.java" |xargs cat|wc -l
+                find ./hr/ -name "*.dym" |xargs cat|wc -l
+            或
+                wc -l `find ./hr/ -name "*.java"`|tail -n1
+        3.统计hr目录下所有java文件代码行数，过滤了空行：
+            find ./hr/ -name "*.java" |xargs cat|grep -v ^$|wc -l
+    pip 安装
+        pip install --trusted-host mirrors.tools.huawei.com -i http://mirrors.tools.huawei.com/pypi/simple
+    总结
+        子主题

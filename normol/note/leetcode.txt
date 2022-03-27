@@ -1,0 +1,348 @@
+leetcode分析
+    总思维
+        数据结构的存储方式
+            两个
+                数组
+                链表
+            常见数据结构
+                队列/栈
+                    数组
+                        需要维护扩容
+                图
+                    二维数组
+                        邻接矩阵
+                            判断连通性迅速
+                            可以进行矩阵运算解决一些问题
+                            但是如果图比较稀疏的话很耗费空间
+                    链表
+                        邻接表
+                            省空间
+                            但操作的效率上肯定比不过邻接矩阵
+                散列表
+                    数组 + 链表
+                        Hashmap
+                树
+                    数组
+                        堆
+                            完全二叉树
+                    链表
+                        衍生
+                            二叉搜索树
+                            AVL树
+                            红黑树
+                            区间树
+                            B树
+            优缺点分析
+                数组
+                    优点
+                        可以随机访问
+                        指定数量, 相对节约空间
+                    缺点
+                        增删 最差 O(N) 需要扩容或 维护连续性
+                链表
+                    优点
+                        增删 O(1)
+                    缺点
+                        不可随机访问
+                        有链表 消耗存储空间
+        数据结构的基本操作
+            遍历访问
+                数组
+                    for / while 迭代
+                链表
+                    for / while 迭代
+                        变量/Queue 存储 当前访问节点 
+                        遍历 塞入 变量/Queue 访问
+                    递归
+    动态规划
+        介绍
+            场景
+                一般形式
+                    求最值
+            求最值方式
+                暴力穷举
+                    存在「重叠子问题」
+                    效率低
+                优化方式
+                    自顶向下
+                        递归 + 备忘录
+                    自底向上
+                        for所有状态 + dp 数组
+                优化分析
+                    具备「最优子结构」
+                    列出正确的「状态转移方程」
+        架构
+            备忘录
+                边界返回
+                备忘录返回
+                定义结果 res
+                写状态转移方程
+                    f(n) = f(n-1) + f(m-2)
+                记录备忘结果 res
+                返回
+            dp
+                初始化 dp数组值
+                    dp[0][0][...] = base
+                进行状态转移循环
+                    for 状态1 in 集合1
+                    for 状态2 in 集合2 ...
+                    循环内求最值
+                        dp[1][2][...] = 求最值( 选择1, 选择2, ...)
+                备忘录区别
+                    需要循环替换 递归
+        分析方法
+            重叠子问题
+                斐波那契数列
+                    f(10) = f(9) + f(8)
+                    f(9) = f(8) + f(7)
+                    ...
+                    这里有 两个 f(8) 等等
+                备忘录
+                    把一棵存在巨量冗余的递归树 通过「剪枝」，
+                    改造成了一幅不存在冗余的递归图
+            状态转移方程
+                斐波那契数列
+                    f(n) = 1,  n=1,2
+                    f(n) = f(n-1) + f(n-2), n>2
+                动态规划问题最困难的就是写出这个暴力解
+            最优子结构
+                其他问题也有
+    回溯算法
+        介绍
+            场景
+                解决一个回溯问题
+                    = 决策树的遍历过程
+            其实 DFS 算法就是回溯算法
+            需要思考三个问题
+                路径
+                    已经做出的选择
+                选择列表
+                    当前可以做的选择
+                结束条件
+                    决策树底层
+                        无法再做选择的条件
+            回溯框架，而且时间复杂度都不可能低于 O(N!)，因为穷举整棵决策树是无法避免的
+            这也是回溯算法的一个特点，不像动态规划存在 [重叠子问题] 可以优化
+            回溯算法就是纯暴力穷举，复杂度一般都很高
+        backTrack方法架构
+            判断满足条件 加入 resList
+                全局结果 resList
+            for 选择A in 选择列表
+                做选择
+                backTract(路径, 选择列表)
+                撤销选择
+        全排列
+            多了的内容
+            for 选择A in 选择列表
+                做选择
+                    多了 去重判断, 已经做了的选择 continute;
+                backTract(路径, 选择列表)
+                撤销选择
+        N皇后
+            分析
+                选择列表
+                    = 每一行做的选择
+            多了的内容
+            for 选择A in 选择列表
+                做选择
+                    往上边, 左上, 右上校验, 排除冲突, continute;
+                backTract(路径, 选择列表)
+                撤销选择
+        数独
+            分析
+                只要一个结果就行, 不需要全部排序
+            多了的内容
+            判断满足条件 加入 resList
+                改成 return true
+            for 选择A in 选择列表
+                做选择
+                backTract(路径, 选择列表)
+                    if 判断 一下, true return true 终止
+                撤销选择
+            方法末尾 return false;
+    BFS算法
+        介绍
+            场景
+                让你在一幅「图」中找到从起点 start 到终点 target 的最近距离
+        bfs架构
+            定义变量
+                Queue q
+                    核心数据结构, 默认 = [当前点]
+                Set visited
+                    避免走回头路
+                        默认 = [当前点]
+                int step
+                    默认步数 0
+            q 不为空, while 循环
+                取出当前 q的 数量, 用于 for 循环
+                    int size = q.size()
+                for  i... size 循环
+                    cur = q 取出第一个
+                    判断是否到达终点
+                        到达 return step;
+                            「重点」
+                    过滤visited
+                        存在 continute
+                    添加进 visited
+                    将 cur 可以选择的 路线 添加到 q
+                step ++
+                    「重点」
+        二叉树的最小的高度
+            判断到达终点
+                node.left && node.right == null
+            选择路线
+                node.left
+                node.right
+        解开密码锁的最少次数
+            基本操作
+                visited
+                    加入 炸弹密码
+            双向BFS优化
+                Queue q 改造
+                    改造成 带个 Set q1, q2
+                    Set 是用于 contaions 返回结果 判断优化
+                for q1 开始时
+                    定义一个新 Set tmp, 用于替换 q2
+                一层 while 循环过后
+                    q1 = q2
+                    q2 = tmp
+                    达到双向 BFS 目的
+                判断是否到达重点时
+                    q2.contains 判断即可
+            双向BFS优化 2
+                while 循环开始时
+                    判断 q1 数量是否 > q2
+                    > 时, 交换 q1 q2
+                    减少遍历次数
+    单链表
+        合并2个有序链表
+            定义虚拟节点
+            n1 n2, 哪个小 哪个插入
+            循环至 末尾
+            返回 dummyNode.next
+        合并k个有序链表
+            使用最小堆
+                PriorityQueue
+            合并分治
+                也就是 合并排序
+                list, 拆 2半 执行
+                    类似于 ForkJoinTask
+        单链表的倒数第 k 个节点
+            快慢指针
+            fast 先遍历 k个
+            while 循环
+                fast = fast.next
+                slow = slow.next
+        单链表的中点
+            快慢指针
+            while循环
+                fast = fast.next.next
+                slow = slow.next
+        判断链表是否包含环
+            快慢指针
+            while循环
+                fast = fast.next.next
+                slow = slow.next
+                结束条件
+                    fast == slow
+            结束条件2 遍历到空了, 没有闭环
+            求相遇点
+                while 循环结束
+                    fast == slow
+                然后 fast 重置到 起点
+                然后 正常双指针 遍历 至相等
+                while 循环
+                    fast = fast.next
+                    slow = slow.next
+                    结束点, 条件
+                        fast == slow
+        两个链表是否相交
+            双指针
+                p1 = head1, p2= head2
+            while 循环
+                p1 == p2
+                    return p1 就是 相交点 或 null
+                p1 == null
+                    真
+                        p1 = head2
+                    假
+                        p1 = p1.next
+                p2 == null
+                    真
+                        p2 = head1
+                    假
+                        p2 = p2.next
+    岛屿题目
+        介绍
+            场景
+                二维数组判断
+        dfs遍历架构
+            index 越界问题 过滤
+            visited 过滤
+                类似于 遍历岛屿后 淹了
+                    避免维护 visited 数组。
+                    dfs 别名 floodFill算法
+                        水淹
+            上下左右遍历 递归
+        其他题目
+            封闭岛屿
+                淹掉 边缘岛屿, 再 计算岛屿数量
+            岛屿的最大面积
+                dfs 返回 淹没数量
+            子岛屿数量grad1/grad2
+                方法1
+                    只淹2, 淹的时候 判断 是否是 grad1 子集
+                方法2
+                    先淹2中存在, 1中不存在的岛屿
+                    再全部 淹2数量, 即答案
+        压轴
+            不同的岛屿数量
+                定义一个 StringBuilder sb 作为 岛屿标识
+                dfs 时候, 用回溯算法框架 记录 遍历顺序, sb
+                    1上,2下,3左,4右,-1撤回上,-2撤回下..
+                    注意撤回操作也是要记录的
+                        ┌ └ 不然这两个分不清
+                        都是 先下 后右边
+                sb 去重后 数量, 即为答案
+    二分搜索
+        介绍
+            场景
+                有序数组 找位置
+        双闭搜索架构
+            定义左右闭区间
+                int left = 0, right = len - 1
+            while 循环 left <= right
+                取中值 int mid = (left + right) / 2
+                等于 arr[mid] == tar
+                    业务逻辑
+                小于 arr[mid] < tar
+                    left = mid + 1
+                大于 arr[mid] > tar
+                    right = mid - 1
+    滑动窗口
+        介绍
+            场景
+                src源数据, 找 tar 数据, 排列方式不限, 类似找子集
+                多用于 src 字符串, 找 tar字符串的其他排列, 类似文本相似度
+        主算法逻辑
+            定义窗口内容
+                字母 int[] tarMap = new int[128]
+                其余 Map<Key, Integer>
+            定义窗口
+                int left = 0, right = 0;
+            while 循环至 right
+                right 增大窗口
+                right ++
+                业务逻辑判断 是否符合 要求之类的
+                缩小窗口 while
+                    left 缩小窗口
+                    left ++ 
+        注意点
+            要求判断可以用 validate 表示 
+                validate = tar.length
+                right++ 时
+                    tarMap[item] 判断 validate ++ 还是 -- 还是 不操作
+                left++ 时
+                    tarMap[item] 判断 validate ++ 还是 -- 还是 不操作
+            要求判断也可以用 另外一个 Map 存储
+                复杂逻辑
