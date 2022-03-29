@@ -1,4 +1,6 @@
 .idea
 Wordlist
-密码字典.rar
-解压密码.txt
+.gradle
+out
+venv
+build
