@@ -5,14 +5,15 @@ import sun.misc.Launcher;
 
 import java.net.URL;
 
-public class TestMain {
+public class _01_测试ClassLoader有几个 {
     public static void main(String[] args) {
+        new _01_测试ClassLoader有几个();
         // 获取内容
         ClassLoader stringCL = String.class.getClassLoader();
         System.out.println(stringCL);
         ClassLoader desCL = DESKeyFactory.class.getClassLoader();
         System.out.println(desCL);
-        ClassLoader appCl = TestMain.class.getClassLoader();
+        ClassLoader appCl = _01_测试ClassLoader有几个.class.getClassLoader();
         System.out.println(appCl);
 
         System.out.println("-------------------华丽分割线----------------------");
