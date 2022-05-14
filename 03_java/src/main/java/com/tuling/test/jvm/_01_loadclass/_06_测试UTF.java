@@ -1,6 +1,11 @@
 package com.tuling.test.jvm._01_loadclass;
 
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 public class _06_测试UTF {
     public static void main(String[] args) {
 
@@ -22,7 +27,7 @@ public class _06_测试UTF {
         print("tmp", tmp);
         char num = 0xffff;
         System.out.println("-------------------另外で一条，华丽の分割线----------------------");
-        testOther();
+        // testOther();
     }
 
     private static void testOther() {
@@ -57,5 +62,11 @@ public class _06_测试UTF {
         System.out.println(String.format("16: %s=%s", name, Integer.toHexString(val)));
         System.out.println(String.format("s: %s=%s", name, Character.isSupplementaryCodePoint(val)));
         System.out.println(String.format("s: %s=%s", name, Character.isSurrogate((char) val)));
+        CopyOnWriteArrayList<Object> objects = new CopyOnWriteArrayList<>();
+        ArrayList<Object> dd = new ArrayList<>();
+        dd.iterator();
+        TreeSet<Object> objects1 = new TreeSet<>();
+        Iterator<Object> iterator = objects.iterator();
+
     }
 }
