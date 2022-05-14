@@ -3,7 +3,6 @@ package com.fizz.base64;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
@@ -22,13 +21,13 @@ public class MainBase64 {
         path = loc.substring(0, loc.lastIndexOf("03_java") + 8) + "src/main/java/com/fizz/base64/file/";
     }
     public static void main(String[] args) throws Exception{
-        // srcToBase64();
-        base64ToSrc();
+        srcToBase64();
+        // base64ToSrc();
     }
 
     public static void srcToBase64() throws Exception{
         byte[] bytes = Files.readAllBytes(Paths.get(path + src));
-        byte[] encode = Base64.getEncoder().encode(bytes);
+        byte[] encode = zipBase64(bytes);
         Files.write(Paths.get(path + target), encode);
     }
     public static void base64ToSrc() throws Exception{
@@ -38,20 +37,16 @@ public class MainBase64 {
     }
 
 
-
-    public static String zipBase64(String text) {
-        return zipBase64(text.getBytes(StandardCharsets.UTF_8));
-    }
-    public static String zipBase64(byte[] bytes) {
+    public static byte[] zipBase64(byte[] bytes) {
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             try (DeflaterOutputStream out = new DeflaterOutputStream(os)) {
                 out.write(bytes);
             }
-            return new String(Base64.getEncoder().encode(os.toByteArray()));
+            return Base64.getEncoder().encode(os.toByteArray());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        return "";
+        return null;
     }
 
     public static byte[] unzipBase64(byte[] bytes) {
@@ -66,15 +61,4 @@ public class MainBase64 {
         return null;
     }
 
-    public static String unzipBase64(String text) {
-        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-            try (InflaterOutputStream out = new InflaterOutputStream(os)) {
-                out.write(Base64.getDecoder().decode(text));
-            }
-            return new String(os.toByteArray(), StandardCharsets.UTF_8);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        return "";
-    }
 }
