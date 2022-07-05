@@ -21,7 +21,7 @@ output
 # test/webapp-virtual-webapp use it:
 # target
 work
-build.properties
+build_jar/build.properties
 mvn.properties
 .checkstyle
 .classpath
