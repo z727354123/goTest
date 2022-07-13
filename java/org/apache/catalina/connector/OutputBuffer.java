@@ -449,6 +449,7 @@ public class OutputBuffer extends Writer
         // 如果此前已经调用过flush方法
         if (doFlush) {
             // 那么每次write都把缓冲中的数据发送出去
+
             bb.flushBuffer();
         }
 

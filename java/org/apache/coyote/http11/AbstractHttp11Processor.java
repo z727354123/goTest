@@ -765,7 +765,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         getOutputBuffer().addFilter(new IdentityOutputFilter());
 
         // Create and add the chunked filters.
-        getInputBuffer().addFilter( new ChunkedInputFilter(maxTrailerSize,allowedTrailerHeaders,
+        getInputBuffer().addFilter(
+            new ChunkedInputFilter(maxTrailerSize,allowedTrailerHeaders,
                 maxExtensionSize, maxSwallowSize));
         getOutputBuffer().addFilter(new ChunkedOutputFilter());
 
@@ -1149,6 +1150,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 // Setting up filters, and parse some request headers
                 rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);  // 设置请求状态为预处理状态
                 try {
+
                     prepareRequest();   // 预处理, 主要从请求中处理处keepAlive属性，以及进行一些验证，以及根据请求分析得到ActiveInputFilter
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
@@ -1230,6 +1232,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 }
                 // 当前http请求已经处理完了，做一些收尾工作
                 endRequest();
+
             }
 
             rp.setStage(org.apache.coyote.Constants.STAGE_ENDOUTPUT); // 请求状态为输出结束
@@ -1244,6 +1247,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             if (!isAsync() && !comet || getErrorState().isError()) {
                 if (getErrorState().isIoAllowed()) {
                     // 准备处理下一个请求
+
                     getInputBuffer().nextRequest();
                     getOutputBuffer().nextRequest();
                 }

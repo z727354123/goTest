@@ -33,7 +33,7 @@ import org.apache.tomcat.util.net.SocketWrapper;
  *
  * @author <a href="mailto:remm@apache.org">Remy Maucherat</a>
  */
-public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
+    public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
     implements ByteChunk.ByteOutputChannel {
 
     // ----------------------------------------------------------- Constructors
@@ -97,8 +97,7 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
     // --------------------------------------------------------- Public Methods
 
     @Override
-    public void init(SocketWrapper<Socket> socketWrapper,
-            AbstractEndpoint<Socket> endpoint) throws IOException {
+    public void init(SocketWrapper<Socket> socketWrapper, AbstractEndpoint<Socket> endpoint) throws IOException {
 
         outputStream = socketWrapper.getSocket().getOutputStream();
     }

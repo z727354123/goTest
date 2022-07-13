@@ -266,6 +266,7 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
         if (swallowInput && (lastActiveFilter != -1)) {
             // 多度的数据
             int extraBytes = (int) activeFilters[lastActiveFilter].end();
+
             pos = pos - extraBytes; // 把pos向前移动
         }
     }

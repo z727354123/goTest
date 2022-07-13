@@ -176,6 +176,7 @@ public class ChunkedInputFilter implements InputFilter {
      */
     @Override
     public int doRead(ByteChunk chunk, Request req) throws IOException {
+
         if (endChunk) {
             return -1;
         }

@@ -33,6 +33,7 @@ import org.apache.tomcat.util.res.StringManager;
  */
 public class IdentityInputFilter implements InputFilter {
 
+
     private static final StringManager sm = StringManager.getManager(
             IdentityInputFilter.class.getPackage().getName());
 
@@ -146,8 +147,7 @@ public class IdentityInputFilter implements InputFilter {
                     // The chunk is longer than the number of bytes remaining
                     // in the body; changing the chunk length to the number
                     // of bytes remaining
-                    chunk.setBytes(chunk.getBytes(), chunk.getStart(),
-                                   (int) remaining);
+                    chunk.setBytes(chunk.getBytes(), chunk.getStart(), (int) remaining);
                     result = (int) remaining;
                 } else {
                     // 如果真实读到的数据小于剩下的

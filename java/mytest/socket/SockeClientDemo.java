@@ -17,9 +17,7 @@ public class SockeClientDemo {
 
     public static void main(String[] args) throws Exception{
         Socket socket = new Socket("localhost", 8101);
-
         OutputStream outputStream = socket.getOutputStream();
-
         int i = 1;
         while (true) {
             System.out.println(i++);

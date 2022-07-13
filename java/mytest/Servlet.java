@@ -3,6 +3,8 @@ package mytest;
 import com.sun.net.httpserver.HttpServer;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -13,6 +15,14 @@ public class Servlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         PrintWriter writer = resp.getWriter();
+        ServletInputStream inputStream = req.getInputStream();
+
+        inputStream.read(null);
         writer.print("Hello Servlet");
+
+        ServletOutputStream out = resp.getOutputStream();
+        out.write(null);
+        out.flush();
+
     }
 }

@@ -12,9 +12,7 @@ public class SockeServerDemo {
 
     public static void main(String[] args) throws Exception{
         ServerSocket serverSocket = new ServerSocket(8101);
-
         Socket socke = serverSocket.accept();
-
         InputStream inputStream = socke.getInputStream();
         InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
         BufferedReader reader = new BufferedReader(inputStreamReader);

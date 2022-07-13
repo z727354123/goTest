@@ -166,8 +166,7 @@ public class Http11Processor extends AbstractHttp11Processor<Socket> {
                 firstReadTimeout = 0;
             } else {
                 // 一个socket在被处理之前会调用一下access方法，所以queueTime表示的是socket创建好了到真正被处理这段过程的排队时间
-                long queueTime =
-                    System.currentTimeMillis() - socketWrapper.getLastAccess();
+                long queueTime = System.currentTimeMillis() - socketWrapper.getLastAccess();
 
                 // 如果排队时间大于keepAliveTimeout，表示该socket已经超时了不需要被处理了，设置一个最小的超时时间，当从这个socket上读取数据时会立刻超时
                 if (queueTime >= keepAliveTimeout) {
