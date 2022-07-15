@@ -1,0 +1,17 @@
+接口: IHRCSBizDataPermissionService: getAuthorizedAdminOrgs
+入参:
+1. userId
+2. app应用id
+3. 页面元数据编码formid
+4. 权限项 (查看)
+返回参数 AuthorizedOrgResult 
+返回当前人有权限的行政组织.
+
+有个问题:
+这个接口会 判断一个基础资料hrcs_permauthconfig
+(鉴权接入列表)
+里面有没有 这个 formid, 导致接口返回空
+
+目前uat的 hrcs_permauthconfig 没有新创建的
+想知道生产 hrcs_permauthconfig 是怎么同步的
+uat 也想同步这个配置,该怎么操作
