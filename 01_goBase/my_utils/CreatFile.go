@@ -24,7 +24,10 @@ func main() {
 	for true {
 		fmt.Println("\n请输入文件名：")
 		//当程序只是到fmt.Scanln(&name)程序会停止执行等待用户输入
-		fmt.Scanln(&name)
+		_, err2 := fmt.Scanln(&name)
+		if err2 != nil {
+			continue
+		}
 		fullName := fmt.Sprintf("%s_%s", getFileNamePre(), parseName(name))
 		file, err := os.Create(fullName)
 		if err != nil {
