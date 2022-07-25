@@ -13,7 +13,7 @@ func main() {
 	arr := getCurXlsxArr()
 	for _, val := range arr {
 		// 处理文件
-		fmt.Printf("%s 处理文件 : [%s]", getStr(1), val)
+		fmt.Printf("%s 处理文件 : [%s]\n\n", getStr(1), val)
 		parseXlsx(val)
 	}
 	// 阻塞
@@ -41,7 +41,6 @@ func parseXlsx(file string) {
 	}
 	// 获取工作表中指定单元格的值
 	list := excel.GetSheetList()
-	fmt.Println(list)
 	for _, sheetName := range list {
 		fmt.Printf("%s 解析 sheet : [%s]\n\n", getStr(2), sheetName)
 		parseSheet(excel, sheetName)
@@ -90,7 +89,6 @@ func parseContentRow(srcIdx int, targetIdx int, row []string, rowIdx int, sheetN
 		fmt.Printf("解析 Json 异常 [%s], 行[%d], 内容[%s] \n\n", sheetName, rowIdx, tarStr)
 		return
 	}
-
 }
 
 func JsonToMap(jsonStr string) (map[string]string, error) {
@@ -147,7 +145,7 @@ func getCurXlsxArr() []string {
 	arr := []string{}
 	for _, f := range files {
 		name := f.Name()
-		index := strings.LastIndex(name, ".xlsx")
+		index := len(name) - strings.LastIndex(name, ".xlsx")
 		if index == 5 {
 			arr = append(arr, "./"+name)
 		}
