@@ -3,6 +3,7 @@ package com.tuling.test.jvm._01_loadclass;
 import com.fizz.User;
 
 import java.io.FileInputStream;
+import java.lang.reflect.Method;
 
 public class _03_测试打破双亲委派自定义ClassLoader {
 
@@ -16,6 +17,10 @@ public class _03_测试打破双亲委派自定义ClassLoader {
         Class<?> aClass =  myClsLoader.loadClass("com.fizz.User");
         Object obj = aClass.newInstance();
         System.out.println(obj);
+        System.out.println("-------------------另外で一条，华丽の分割线----------------------");
+        Method getUser = aClass.getMethod("getUser");
+        Object invoke = getUser.invoke(obj);
+        System.out.println(invoke.getClass().getClassLoader());
         System.out.println(obj.getClass().getName());
         System.out.println(obj.getClass().getClassLoader());
     }
@@ -51,7 +56,11 @@ public class _03_测试打破双亲委派自定义ClassLoader {
         @Override
         public Class<?> loadClass(String name) throws ClassNotFoundException {
             synchronized (getClassLoadingLock(name)) {
-                Class<?> c = findClass(name);
+                Class<?> c = findLoadedClass(name);
+                if (c != null) {
+                    return c;
+                }
+                c = findClass(name);
                 if (c == null) {
                     return super.loadClass(name);
                 }
