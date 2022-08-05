@@ -53,6 +53,7 @@ public class _01_myans {
         public int countPairs(int[] deliciousness) {
             int ans = 0;
             // 排列组合
+            final int MOD = 1000000007;
             Map<Integer, AtomicInteger> countMap = new HashMap<>();
             for (int num : deliciousness) {
                 countMap.computeIfAbsent(num, it -> new AtomicInteger(0)).incrementAndGet();
@@ -71,6 +72,7 @@ public class _01_myans {
                     // 求和
                     if (isTowMi(outNum)) {
                         ans += (outCount * (outCount - 1)) >> 1;
+                        ans %= MOD;
                     }
                 }
                 for (Map.Entry<Integer, AtomicInteger> inEntry : countMap.entrySet()) {
@@ -81,6 +83,7 @@ public class _01_myans {
                     if (isTowMi(outNum + inNum)) {
                         int inCount = inEntry.getValue().get();
                         ans += outCount * inCount;
+                        ans %= MOD;
                     }
                 }
             }
