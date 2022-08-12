@@ -4,3 +4,4 @@ Wordlist
 out
 venv
 build
+cmake-build-debug
