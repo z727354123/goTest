@@ -27,8 +27,18 @@ file(GLOB files
         base/${myPath}/*.h)
 add_executable(${myProName} ${files})
 
-#第2个项目
+#第3个项目
 set(myPath 03_1696)
+set(myProName ${myPath})
+project(${myProName})
+file(GLOB files
+        base/${myPath}/*.cpp
+        base/${myPath}/*.c
+        base/${myPath}/*.h)
+add_executable(${myProName} ${files})
+
+#第4个项目
+set(myPath 04_1695)
 set(myProName ${myPath})
 project(${myProName})
 file(GLOB files
