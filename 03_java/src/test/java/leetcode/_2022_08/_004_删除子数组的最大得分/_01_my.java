@@ -54,19 +54,23 @@ public class _01_my {
             for (int right = 1; right < len; right++) {
                 // 取出值
                 int val = nums[right];
-                Integer idx = idxMap.getOrDefault(val, -1);
                 tmp += val;
-                idxMap.put(val, right);
+                Integer idx = idxMap.getOrDefault(val, -1);
                 // 计算最大值
                 if (idx < 0) {
+                    idxMap.put(val, right);
                     res = Math.max(tmp, res);
                     continue;
                 }
                 // 存在值了
                 while (left <= idx) {
                     // 移除
-                    tmp -= nums[left++];
+                    int removeVal = nums[left++];
+                    // 漏了这一步
+                    idxMap.remove(removeVal);
+                    tmp -= removeVal;
                 }
+                idxMap.put(val, right);
             }
             return res;
         }
