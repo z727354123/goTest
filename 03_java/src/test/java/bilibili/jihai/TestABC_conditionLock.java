@@ -1,6 +1,5 @@
 package bilibili.jihai;
 
-import java.io.IOException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,6 +18,8 @@ public class TestABC_conditionLock {
                     lock.lock();
                     if (num++ < 100) {
                         System.out.print("A");
+                    } else {
+                        System.exit(0);
                     }
                     condB.signal();
                     condA.await();
@@ -35,6 +36,8 @@ public class TestABC_conditionLock {
                     lock.lock();
                     if (num++ < 100) {
                         System.out.print("B");
+                    } else {
+                        System.exit(0);
                     }
                     condC.signal();
                     condB.await();
@@ -51,6 +54,8 @@ public class TestABC_conditionLock {
                     lock.lock();
                     if (num++ < 100) {
                         System.out.print("C");
+                    } else {
+                        System.exit(0);
                     }
                     condA.signal();
                     condC.await();
