@@ -6,8 +6,11 @@ import java.util.OptionalInt;
 
 public class _01_myans {
     public static void main(String[] args) {
+        int[] arr = {35, 43, 23, 86, 23, 45, 84, 2, 18, 83, 79, 28, 54, 81, 12, 94, 14, 0, 0, 29, 94, 12, 13, 1, 48, 85, 22, 95, 24, 5, 73, 10, 96, 97, 72, 41, 52, 1, 91, 3, 20, 22, 41, 98, 70, 20, 52, 48, 91, 84, 16, 30, 27, 35, 69, 33, 67, 18, 4, 53, 86, 78, 26, 83, 13, 96, 29, 15, 34, 80, 16, 49};
+
         Solution sol = new Solution();
 
+        int val = sol.maximumTop(arr, 15);
     }
 
     static
@@ -68,6 +71,10 @@ public class _01_myans {
             int minLen = Math.min(k + 1, len);
             int ans = -1;
             for (int i = 0; i < minLen; i++) {
+                if (i == k - 1) {
+                    // 不能包含
+                    continue;
+                }
                 ans = Math.max(ans, nums[i]);
             }
             return ans;
